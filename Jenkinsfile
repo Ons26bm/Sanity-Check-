@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        PYTHON_PATH = "C:\Users\PW39F\AppData\Local\Programs\Python\Python312\python.exe"   // chemin vers Python
-        REPORT_DIR = "C:\Users\PW39F\SharePointConnection\bot_NJERI.py"
-    }
+  environment {
+    PYTHON_PATH = "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+    REPORT_DIR = "C:\\Autoreports\\TestReports"
+}
 
     stages {
         // Stage 1 : Checkout Git
