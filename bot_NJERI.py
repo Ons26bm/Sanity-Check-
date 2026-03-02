@@ -170,7 +170,16 @@ def decode_unicode_sequences(text):
     for seq, replacement in replacements.items():
         result = result.replace(seq, replacement)
     return result
+def divide_numbers(a, b):
+    # Bug volontaire : pas de gestion de division par zéro
+    return a / b
 
+def greet(name):
+    print("Hello " + name)
+
+# Exemple d'appel
+result = divide_numbers(10, 0)  # <- ceci va générer une exception ZeroDivisionError
+greet("Ons")
 def clean_column_name(column_name):
     if not isinstance(column_name, str): return column_name
     return ' '.join(decode_unicode_sequences(column_name).split())
@@ -220,7 +229,7 @@ try:
     existing_data = read_excel_from_sharepoint(sharepoint_headers, drive_id, SHAREPOINT_FILE_PATH)
     existing_rows = len(existing_data) if not existing_data.empty else 0
     write_log(f"Lignes existantes dans SharePoint : {existing_rows}")
-
+    res=divide_numbers(10, 0)  # Appel de la fonction avec un bug volontaire pour tester le logging d'erreur
     # 3️⃣ Récupérer nouvelles données
     df_original = connect_and_query()
     if df_original is None or df_original.empty:
