@@ -19,7 +19,6 @@ pipeline {
         stage('Build / Setup') {
             steps {
                 echo 'Installation des dépendances Python (si nécessaire)...'
-                bat "${env.PYTHON_PATH} -m pip install -r requirements.txt"
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
