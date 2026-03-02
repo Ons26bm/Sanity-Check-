@@ -3,14 +3,14 @@ pipeline {
 
   environment {
     PYTHON_PATH = "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
-    REPORT_DIR = "C:\Users\PW39F\SharePointConnection"
+    REPORT_DIR = "C:\\Autoreports\\TestReports"
 }
 
     stages {
         // Stage 1 : Checkout Git
         stage('Git Checkout') {
             steps {
-                git branch: 'main',
+                git branch: 'master',
                     url: 'https://github.com/Ons26bm/Sanity-Check-.git'
             }
         }
@@ -35,7 +35,7 @@ pipeline {
         // stage('Test / Sanity Check') {
         //     steps {
         //         echo 'Exécution du fichier de test...'
-        //         bat "${env.PYTHON_PATH} test_script.py > ${env.REPORT_DIR}\\test_script_log.txt 2>&1"
+        //         bat "${env.PYTHON_PATH} bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1"
         //     }
         // }
     }
