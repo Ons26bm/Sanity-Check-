@@ -45,7 +45,8 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 SITE_DOMAIN = os.getenv("SITE_DOMAIN")
 SITE_NAME = os.getenv("SITE_NAME")
 SHAREPOINT_FILE_PATH = os.getenv("SHAREPOINT_FILE_PATH")  # ex: General/Autoreports Status
-
+unused_var = 42  
+print("Hello world")
 # Log file name
 log_filename = f"bot_NJERI_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 
