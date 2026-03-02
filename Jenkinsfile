@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     PYTHON_PATH = "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
-    REPORT_DIR = "C:\Users\PW39F\SharePointConnection\\bot_NJERI.py"
+    REPORT_DIR = "C:\Users\PW39F\SharePointConnection"
 }
 
     stages {
