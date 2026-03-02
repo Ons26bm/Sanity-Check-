@@ -23,14 +23,13 @@ pipeline {
             }
         }
 
-        // Stage 3 : SonarQube Analyse
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    bat "sonar-scanner -Dsonar.projectKey=TestAutoreports -Dsonar.sources=./"
-                }
-            }
+      stage('SonarQube Analysis') {
+       steps {
+        withSonarQubeEnv('SonarQubeServer') {
+            bat "C:\\Users\\PW39F\\Downloads\\sonar-scanner-cli-8.0.1.6346-windows-x64\\sonar-scanner-8.0.1.6346-windows-x64\\bin\\sonar-scanner.bat -Dsonar.projectKey=TestAutoreports -Dsonar.sources=./"
         }
+    }
+}
 
         // Stage 4 : Test / Sanity Check
         stage('Test / Sanity Check') {
