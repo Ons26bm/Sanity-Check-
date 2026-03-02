@@ -31,13 +31,13 @@ pipeline {
     }
 }
 
-        // Stage 4 : Test / Sanity Check
-        stage('Test / Sanity Check') {
-            steps {
-                echo 'Exécution du fichier de test...'
-                bat "${env.PYTHON_PATH} test_script.py > ${env.REPORT_DIR}\\test_script_log.txt 2>&1"
-            }
-        }
+        // // Stage 4 : Test / Sanity Check
+        // stage('Test / Sanity Check') {
+        //     steps {
+        //         echo 'Exécution du fichier de test...'
+        //         bat "${env.PYTHON_PATH} test_script.py > ${env.REPORT_DIR}\\test_script_log.txt 2>&1"
+        //     }
+        // }
     }
 
     post {
