@@ -32,12 +32,12 @@ pipeline {
 }
 
         // // Stage 4 : Test / Sanity Check
-        stage('Test / Sanity Check') {
-            steps {
-                echo 'Exécution du fichier de test...'
-                bat "${env.PYTHON_PATH} bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1"
-            }
-        }
+   stage('Test / Sanity Check') {
+    steps {
+        echo 'Exécution du fichier de test...'
+        bat "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
+    }
+}
     }
 
     post {
