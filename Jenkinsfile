@@ -58,7 +58,7 @@ stage('Run tests in Docker') {
         stage('Sanity Check Script') {
             steps {
                 echo 'Exécution du script principal bot_NJERI.py...'
-                bat "\"C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
+                bat "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
             }
         }
     }
