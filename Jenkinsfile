@@ -24,31 +24,20 @@ pipeline {
 stage('Run tests in Docker') {
     steps {
         echo 'Exécution des tests pytest et pylint dans Docker...'
+
+        // On crée d'abord un dossier "reports" dans le workspace pour stocker les rapports
+        bat "if not exist C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts\\reports mkdir C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts\\reports"
+
+        // Lancement du conteneur Docker avec le workspace monté et exécution des tests
         bat """
         docker run --rm ^
-            -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
-            -w "/workspace" ^
-            sanity-python:latest ^
-            /bin/sh -c "pytest --maxfail=1 --disable-warnings -q > /workspace/pytest_report.txt 2>&1 || true && pylint *.py > /workspace/pylint_report.txt 2>&1 || true"
+        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
+        -w "/workspace" ^
+        sanity-python:latest ^
+        bash -c "pytest --maxfail=1 --disable-warnings -q > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.txt 2>&1 || true"
         """
     }
 }
-
-        // Stage 3 : Lint avec pylint
-        stage('Lint') {
-            steps {
-                echo 'Exécution de pylint...'
-                bat "pylint . > ${env.REPORT_DIR}\\pylint_report.txt || exit 0"
-            }
-        }
-
-        // Stage 4 : Test avec pytest
-        stage('Tests') {
-            steps {
-                echo 'Exécution des tests pytest...'
-                bat "pytest --maxfail=1 --disable-warnings -q > ${env.REPORT_DIR}\\pytest_report.txt || exit 0"
-            }
-        }
 
         // Stage 5 : SonarQube Analysis
         stage('SonarQube Analysis') {
