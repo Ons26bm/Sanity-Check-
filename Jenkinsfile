@@ -21,6 +21,12 @@ pipeline {
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
+         stage('Check Python') {
+    steps {
+        bat "python --version"
+        bat "pip --version"
+    }
+}
 stage('Run tests in Docker') {
     steps {
         echo 'Exécution des tests pytest et pylint dans Docker...'
@@ -52,7 +58,7 @@ stage('Run tests in Docker') {
         stage('Sanity Check Script') {
             steps {
                 echo 'Exécution du script principal bot_NJERI.py...'
-                bat "python bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
+                bat "\"C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
             }
         }
     }
