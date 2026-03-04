@@ -41,7 +41,7 @@ pipeline {
                 -v "${env.WORKSPACE_DIR}:/workspace" ^
                 -w "/workspace" ^
                 sanity-python:latest ^
-                bash -c "pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=xml:/workspace/reports/coverage.xml > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.txt 2>&1 || true"
+                bash -c "pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=xml:/workspace/reports/coverage.xml > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.json || true"
                 """
             }
         }
@@ -55,7 +55,7 @@ pipeline {
                     -Dsonar.projectKey=SanityCheck ^
                     -Dsonar.sources=./ ^
                     -Dsonar.python.coverage.reportPaths=${env.WORKSPACE_DIR}\\reports\\coverage.xml ^
-                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.txt
+                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.json
                     """
                 }
             }
