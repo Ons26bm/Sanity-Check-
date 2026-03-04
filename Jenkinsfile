@@ -1,5 +1,5 @@
 pipeline {
-    // On utilise l'image Docker que tu as créée
+     agent any
 
     environment {
         REPORT_DIR = "C:\\Autoreports\\SanityCheck"
