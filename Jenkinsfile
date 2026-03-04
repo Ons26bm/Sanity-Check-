@@ -21,10 +21,10 @@ pipeline {
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
-         stage('Check Python') {
+stage('Check Python') {
     steps {
-        bat "python --version"
-        bat "pip --version"
+        bat "where python"
+        bat "echo %PATH%"
     }
 }
 stage('Run tests in Docker') {
