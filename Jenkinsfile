@@ -23,7 +23,7 @@ pipeline {
         }
          stage('Check Python') {
     steps {
-        bat "python --version"
+        bat "C:\Users\PW39F\AppData\Local\Programs\Python\Python312 --version"
         bat "pip --version"
     }
 }
