@@ -53,7 +53,7 @@ log_filename = f"bot_NJERI_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 # ------------------ SHAREPOINT LOGGING ------------------
 sharepoint_headers = None
 drive_id = None
-
+unused = 1 
 def write_log(message):
     """
     Écrit un message de log directement sur SharePoint (append si fichier existe)
