@@ -26,6 +26,18 @@ pipeline {
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
+        stage('Run tests in Docker') {
+    steps {
+        echo 'Lancer les tests avec pytest et pylint dans Docker...'
+        bat """
+        docker run --rm ^
+        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:C:/workspace" ^
+        -w "C:/workspace" ^
+        sanity-python:latest ^
+        cmd.exe /c "pytest && pylint *.py"
+        """
+    }
+}
 
         // Stage 3 : Lint avec pylint
         stage('Lint') {
