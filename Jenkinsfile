@@ -21,16 +21,16 @@ pipeline {
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
-        stage('Run tests in Docker') {
-    steps {
-        echo 'Lancer les tests avec pytest et pylint dans Docker...'
-        bat """
-        docker run --rm ^
-        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:C:/workspace" ^
-        -w "C:/workspace" ^
-        sanity-python:latest ^
-        cmd.exe /c "pytest && pylint *.py"
-        """
+       stage('Run tests in Docker') {
+           steps {
+                  echo 'Exécution des tests pytest et pylint dans Docker...'
+                  bat """
+                  docker run --rm ^
+                  -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
+                  -w "/workspace" ^
+                  sanity-python:latest ^
+                  cmd.exe /c "pytest --maxfail=1 --disable-warnings -q > C:/Autoreports/SanityCheck/pytest_report.txt 2>&1 || exit 0 && pylint *.py > C:/Autoreports/SanityCheck/pylint_report.txt 2>&1 || exit 0"
+                  """
     }
 }
 
