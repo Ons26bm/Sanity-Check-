@@ -1,8 +1,9 @@
 pipeline {
-     agent any
+    agent any
 
     environment {
         REPORT_DIR = "C:\\Autoreports\\SanityCheck"
+        WORKSPACE_DIR = "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts"
     }
 
     stages {
@@ -14,42 +15,48 @@ pipeline {
             }
         }
 
-        // Stage 2 : Préparation / Setup
+        // Stage 2 : Setup
         stage('Setup') {
             steps {
-                echo 'Création du dossier de rapport si nécessaire...'
+                echo 'Création des dossiers nécessaires...'
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
+                bat "if not exist ${env.WORKSPACE_DIR}\\reports mkdir ${env.WORKSPACE_DIR}\\reports"
             }
         }
-stage('Check Python') {
-    steps {
-        bat "where python"
-        bat "echo %PATH%"
-    }
-}
-stage('Run tests in Docker') {
-    steps {
-        echo 'Exécution des tests pytest et pylint dans Docker...'
 
-        // On crée d'abord un dossier "reports" dans le workspace pour stocker les rapports
-        bat "if not exist C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts\\reports mkdir C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts\\reports"
+        // Stage 3 : Check Python
+        stage('Check Python') {
+            steps {
+                bat "where python"
+                bat "echo %PATH%"
+            }
+        }
 
-        // Lancement du conteneur Docker avec le workspace monté et exécution des tests
-        bat """
-        docker run --rm ^
-        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
-        -w "/workspace" ^
-        sanity-python:latest ^
-        bash -c "pytest --maxfail=1 --disable-warnings -q > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.txt 2>&1 || true"
-        """
-    }
-}
+        // Stage 4 : Run tests in Docker (pytest + pylint + coverage)
+        stage('Run tests in Docker') {
+            steps {
+                echo 'Exécution des tests pytest et pylint avec coverage...'
+                bat """
+                docker run --rm ^
+                -v "${env.WORKSPACE_DIR}:/workspace" ^
+                -w "/workspace" ^
+                sanity-python:latest ^
+                bash -c "pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=xml:/workspace/reports/coverage.xml > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.txt 2>&1 || true"
+                """
+            }
+        }
 
         // Stage 5 : SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
-                    bat "sonar-scanner -Dsonar.projectKey=SanityCheck -Dsonar.sources=./"
+                    bat """
+                    sonar-scanner ^
+                    -Dsonar.projectKey=SanityCheck ^
+                    -Dsonar.sources=./ ^
+                    -Dsonar.python.coverage.reportPaths=${env.WORKSPACE_DIR}\\reports\\coverage.xml ^
+                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.txt
+                    """
                 }
             }
         }
