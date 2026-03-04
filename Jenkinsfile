@@ -1,10 +1,5 @@
 pipeline {
     // On utilise l'image Docker que tu as créée
-    agent {
-        docker {
-            image 'sanity-python:latest'  // <-- ton image Docker contenant pytest, pylint, sonar-scanner
-        }
-    }
 
     environment {
         REPORT_DIR = "C:\\Autoreports\\SanityCheck"
