@@ -1,10 +1,14 @@
 pipeline {
-    agent any
+    // On utilise l'image Docker que tu as créée
+    agent {
+        docker {
+            image 'sanity-python:latest'  // <-- ton image Docker contenant pytest, pylint, sonar-scanner
+        }
+    }
 
-  environment {
-    PYTHON_PATH = "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
-    REPORT_DIR = "C:\\Autoreports\\TestReports"
-}
+    environment {
+        REPORT_DIR = "C:\\Autoreports\\SanityCheck"
+    }
 
     stages {
         // Stage 1 : Checkout Git
@@ -15,29 +19,46 @@ pipeline {
             }
         }
 
-        // Stage 2 : Build / Setup
-        stage('Build / Setup') {
+        // Stage 2 : Préparation / Setup
+        stage('Setup') {
             steps {
-                echo 'Installation des dépendances Python (si nécessaire)...'
+                echo 'Création du dossier de rapport si nécessaire...'
                 bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
             }
         }
 
-      stage('SonarQube Analysis') {
-       steps {
-        withSonarQubeEnv('SonarQubeServer') {
-            bat "C:\\Users\\PW39F\\Downloads\\sonar-scanner-cli-8.0.1.6346-windows-x64\\sonar-scanner-8.0.1.6346-windows-x64\\bin\\sonar-scanner.bat -Dsonar.projectKey=TestAutoreports -Dsonar.sources=./"
+        // Stage 3 : Lint avec pylint
+        stage('Lint') {
+            steps {
+                echo 'Exécution de pylint...'
+                bat "pylint . > ${env.REPORT_DIR}\\pylint_report.txt || exit 0"
+            }
         }
-    }
-}
 
-        // // Stage 4 : Test / Sanity Check
-   stage('Test / Sanity Check') {
-    steps {
-        echo 'Exécution du fichier de test...'
-        bat "C:\\Users\\PW39F\\AppData\\Local\\Programs\\Python\\Python312\\python.exe bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
-    }
-}
+        // Stage 4 : Test avec pytest
+        stage('Tests') {
+            steps {
+                echo 'Exécution des tests pytest...'
+                bat "pytest --maxfail=1 --disable-warnings -q > ${env.REPORT_DIR}\\pytest_report.txt || exit 0"
+            }
+        }
+
+        // Stage 5 : SonarQube Analysis
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQubeServer') {
+                    bat "sonar-scanner -Dsonar.projectKey=SanityCheck -Dsonar.sources=./"
+                }
+            }
+        }
+
+        // Stage 6 : Exécution du script principal (sanity check)
+        stage('Sanity Check Script') {
+            steps {
+                echo 'Exécution du script principal bot_NJERI.py...'
+                bat "python bot_NJERI.py > ${env.REPORT_DIR}\\bot_njeri_log.txt 2>&1 || exit 0"
+            }
+        }
     }
 
     post {
