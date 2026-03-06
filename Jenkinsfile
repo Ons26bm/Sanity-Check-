@@ -37,11 +37,11 @@ pipeline {
             steps {
                 echo 'Exécution des tests pytest et pylint avec coverage...'
                 bat """
-                docker run --rm ^
-                -v "${env.WORKSPACE_DIR}:/workspace" ^
-                -w "/workspace" ^
-                sanity-python:latest ^
-                bash -c "pytest --maxfail=1 --disable-warnings -q --junitxml=/workspace/reports/pytest_report.xml --cov=. --cov-report=xml:/workspace/reports/coverage.xml; pylint --output-format=parseable *.py > /workspace/reports/pylint_report.xml || true"
+            docker run --rm ^
+-v "C:\ProgramData\Jenkins\.jenkins\workspace\SanityCheckScripts:C:\workspace" ^
+-w "C:\workspace" ^
+sanity-python:latest ^
+bash -c "pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=xml:C:\workspace\reports/coverage.xml; pylint *.py --output-format=parseable > C:\workspace\reports/pylint_report.xml || true"
                 """
             }
         }
