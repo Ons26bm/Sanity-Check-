@@ -68,7 +68,7 @@ pipeline {
         //             waitForQualityGate abortPipeline: false
         //         }
         //     }
-        }
+        // }
 
         // Stage 7 : Exécution du script principal (sanity check)
         stage('Sanity Check Script') {
