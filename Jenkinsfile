@@ -41,7 +41,7 @@ pipeline {
         -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
         -w "/workspace" ^
         sanity-python:latest ^
-        bash -c "pylint *.py --output-format=parseable > /workspace/reports/pylint_report.xml || true"
+           pylint *.py --output-format=xml > /workspace/reports/pylint_report.xml || true
                 """
             }
         }
