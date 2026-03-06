@@ -41,7 +41,7 @@ pipeline {
                 -v "${env.WORKSPACE_DIR}:/workspace" ^
                 -w "/workspace" ^
                 sanity-python:latest ^
-                bash -c "pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=xml:/workspace/reports/coverage.xml > /workspace/reports/pytest_report.txt 2>&1; pylint *.py > /workspace/reports/pylint_report.json || true"
+                bash -c "pytest --maxfail=1 --disable-warnings -q --junitxml=/workspace/reports/pytest_report.xml --cov=. --cov-report=xml:/workspace/reports/coverage.xml; pylint --output-format=parseable *.py > /workspace/reports/pylint_report.xml || true"
                 """
             }
         }
@@ -55,13 +55,22 @@ pipeline {
                     -Dsonar.projectKey=SanityCheck ^
                     -Dsonar.sources=./ ^
                     -Dsonar.python.coverage.reportPaths=${env.WORKSPACE_DIR}\\reports\\coverage.xml ^
-                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.json
+                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.xml
                     """
                 }
             }
         }
 
-        // Stage 6 : Exécution du script principal (sanity check)
+        // Stage 6 : Quality Gate (Jenkins attend SonarQube)
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // Stage 7 : Exécution du script principal (sanity check)
         stage('Sanity Check Script') {
             steps {
                 echo 'Exécution du script principal bot_NJERI.py...'
@@ -72,10 +81,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline terminé avec succès !'
+            echo 'Pipeline terminé avec succès et Quality Gate validé !'
         }
         failure {
-            echo 'Pipeline échoué, vérifier les logs.'
+            echo 'Pipeline échoué ou Quality Gate non validé, vérifier les logs.'
         }
     }
 }
