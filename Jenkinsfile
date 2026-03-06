@@ -34,11 +34,11 @@ pipeline {
 
         // Stage 4 : Run Pylint in Docker
         stage('Run Pylint in Docker') {
-            steps {
-                echo 'Exécution de Pylint pour l’analyse statique du code...'
-                bat 'docker run --rm -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" -w "/workspace" sanity-python:latest pylint *.py --output-format=xml > reports/pylint_report.xml'
-            }
-        }
+    steps {
+        echo 'Exécution de Pylint pour l’analyse statique du code...'
+        bat 'docker run --rm -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" -w "/workspace" sanity-python:latest pylint *.py > reports/pylint_report.txt'
+    }
+}
 
         // Stage 5 : SonarQube Analysis
         stage('SonarQube Analysis') {
@@ -48,7 +48,7 @@ pipeline {
                     sonar-scanner ^
                     -Dsonar.projectKey=SanityCheck ^
                     -Dsonar.sources=./ ^
-                    -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.xml
+                    -Dsonar.python.pylint.reportPaths=reports/pylint_report.txt
                     """
                 }
             }
