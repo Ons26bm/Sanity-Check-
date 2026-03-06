@@ -41,7 +41,7 @@ pipeline {
         -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
         -w "/workspace" ^
         sanity-python:latest ^
-           pylint *.py --output-format=xml > /workspace/reports/pylint_report.xml || true
+           pylint *.py --output-format=xml > C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts\\reportspylint_report.xml || true
                 """
             }
         }
