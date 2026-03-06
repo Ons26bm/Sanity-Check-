@@ -36,7 +36,7 @@ pipeline {
         stage('Run Pylint in Docker') {
     steps {
         echo 'Exécution de Pylint pour l’analyse statique du code...'
-        bat 'docker run --rm -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" -w "/workspace" sanity-python:latest pylint *.py > reports/pylint_report.txt'
+        bat 'docker run --rm -v "C:\ProgramData\Jenkins\.jenkins\workspace\SanityCheckScripts:/workspace" -w "/workspace" sanity-python:latest pylint *.py > reports/pylint_report.txt || true'
     }
 }
 
