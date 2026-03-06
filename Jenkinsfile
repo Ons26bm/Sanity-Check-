@@ -64,7 +64,7 @@ pipeline {
         // Stage 6 : Quality Gate (Jenkins attend SonarQube)
         stage("Quality Gate") {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
