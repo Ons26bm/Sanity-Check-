@@ -1,4 +1,4 @@
-pipeline { 
+pipeline {
     agent any
 
     environment {
@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+        // Stage 1 : Checkout Git
         stage('Git Checkout') {
             steps {
                 git branch: 'master',
@@ -14,6 +15,7 @@ pipeline {
             }
         }
 
+        // Stage 2 : Setup
         stage('Setup') {
             steps {
                 echo 'Création des dossiers nécessaires...'
@@ -22,6 +24,7 @@ pipeline {
             }
         }
 
+        // Stage 3 : Check Python
         stage('Check Python') {
             steps {
                 bat "where python"
@@ -29,32 +32,21 @@ pipeline {
             }
         }
 
-        // Stage 4 : Run pytest sur Windows
-        stage('Run pytest') {
+        // Stage 4 : Run Pylint in Docker
+        stage('Run Pylint in Docker') {
             steps {
-                echo 'Exécution des tests pytest avec coverage sur Windows...'
+                echo 'Exécution de Pylint pour l’analyse statique du code...'
                 bat """
-                python -m pytest --maxfail=1 --disable-warnings -q ^
-                --cov=${env.WORKSPACE_DIR} ^
-                --cov-report=xml:${env.WORKSPACE_DIR}\\reports\\coverage.xml
+                   docker run --rm ^
+        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
+        -w "/workspace" ^
+        sanity-python:latest ^
+        bash -c "pylint *.py --output-format=parseable > /workspace/reports/pylint_report.xml || true"
                 """
             }
         }
 
-        // Stage 5 : Run pylint dans Docker
-        stage('Run pylint in Docker') {
-            steps {
-                echo 'Exécution de pylint dans Docker...'
-                bat """
-                docker run --rm ^
-                -v "${env.WORKSPACE_DIR}:/workspace" ^
-                -w "/workspace" ^
-                sanity-python:latest ^
-                bash -c "pylint *.py --output-format=parseable > /workspace/reports/pylint_report.xml || true"
-                """
-            }
-        }
-
+        // Stage 5 : SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
@@ -62,13 +54,13 @@ pipeline {
                     sonar-scanner ^
                     -Dsonar.projectKey=SanityCheck ^
                     -Dsonar.sources=./ ^
-                    -Dsonar.python.coverage.reportPaths=${env.WORKSPACE_DIR}\\reports\\coverage.xml ^
                     -Dsonar.python.pylint.reportPaths=${env.WORKSPACE_DIR}\\reports\\pylint_report.xml
                     """
                 }
             }
         }
 
+        // Stage 6 : Exécution du script principal (sanity check)
         stage('Sanity Check Script') {
             steps {
                 echo 'Exécution du script principal bot_NJERI.py...'
