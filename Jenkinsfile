@@ -33,10 +33,16 @@ pipeline {
         }
 
         // Stage 4 : Run Pylint in Docker
-        stage('Run Pylint in Docker') {
+stage('Run Pylint in Docker') {
     steps {
         echo 'Exécution de Pylint pour l’analyse statique du code...'
-        bat 'docker run --rm -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" -w "/workspace" sanity-python:latest pylint *.py > reports//pylint_report.txt || exit /b 0'
+        bat '''
+        docker run --rm ^
+        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
+        -w /workspace ^
+        sanity-python:latest ^
+        pylint *.py --output-format=json > reports/pylint_report.json
+        '''
     }
 }
 
@@ -48,7 +54,7 @@ pipeline {
                     sonar-scanner ^
                     -Dsonar.projectKey=SanityCheck ^
                     -Dsonar.sources=./ ^
-                    -Dsonar.python.pylint.reportPaths=reports/pylint_report.txt
+                    -Dsonar.python.pylint.reportPaths=reports/pylint_report.json
                     """
                 }
             }
