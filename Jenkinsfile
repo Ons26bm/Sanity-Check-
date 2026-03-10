@@ -16,12 +16,20 @@ pipeline {
         }
 
         // Stage 2 : Setup
-        stage('Setup') {
+stage('Setup') {
     steps {
         echo 'Création des dossiers nécessaires...'
-        bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
-        bat "if exist ${env.WORKSPACE_DIR}\\reports rmdir /s /q ${env.WORKSPACE_DIR}\\reports"
-        bat "mkdir ${env.WORKSPACE_DIR}\\reports"
+        // Création du dossier de rapports si inexistant
+        bat "if not exist \"${env.REPORT_DIR}\" mkdir \"${env.REPORT_DIR}\""
+
+        // Suppression sécurisée du dossier reports
+        bat """
+        if exist \"${env.WORKSPACE_DIR}\\reports\" (
+            echo Tentative de suppression du dossier reports...
+            rmdir /s /q \"${env.WORKSPACE_DIR}\\reports\" || echo Impossible de supprimer reports, peut être utilisé par un autre processus
+        )
+        mkdir \"${env.WORKSPACE_DIR}\\reports\"
+        """
     }
 }
 
