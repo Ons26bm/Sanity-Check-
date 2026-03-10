@@ -60,11 +60,12 @@ stage('Run Pylint in Docker') {
     steps {
         withSonarQubeEnv('SonarQubeServer') {
             bat """
-            sonar-scanner ^
-            -Dsonar.projectKey=SanityCheck ^
-            -Dsonar.sources=./ ^
-            -Dsonar.python.version=3.12 ^
-            -Dsonar.python.pylint.reportPaths=reports/pylint_report.json
+           sonar-scanner ^
+-Dsonar.projectKey=SanityCheck ^
+-Dsonar.sources=. ^
+-Dsonar.python.version=3.12 ^
+-Dsonar.exclusions=reports/* ^
+-Dsonar.python.pylint.reportPaths=reports/pylint_report.json
             """
         }
     }
