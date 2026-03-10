@@ -50,24 +50,24 @@ stage('Run Pylint in Docker') {
         -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
         -w /workspace ^
         sanity-python:latest ^
-       pylint *.py --output-format=checkstyle > reports/pylint_report.xml
+        pylint *.py --output-format=parseable > reports/pylint_report.txt
         """
     }
 }
 
         // Stage 5 : SonarQube Analysis
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    bat """
-                    sonar-scanner ^
-                    -Dsonar.projectKey=SanityCheck ^
-                    -Dsonar.sources=./ ^
-                    -Dsonar.python.pylint.reportPaths=reports/pylint_report.xml
-                    """
-                }
-            }
+ stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQubeServer') {
+            bat """
+            sonar-scanner ^
+            -Dsonar.projectKey=SanityCheck ^
+            -Dsonar.sources=./ ^
+            -Dsonar.python.pylint.reportPaths=reports/pylint_report.txt
+            """
         }
+    }
+}
 
         // Stage 6 : Exécution du script principal (sanity check)
         stage('Sanity Check Script') {
