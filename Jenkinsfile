@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REPORT_DIR = "C:\\Autoreports\\SanityCheck"
-        WORKSPACE_DIR = "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts"
+       WORKSPACE_DIR = "${env.WORKSPACE}"
     }
 
     stages {
