@@ -17,12 +17,13 @@ pipeline {
 
         // Stage 2 : Setup
         stage('Setup') {
-            steps {
-                echo 'Création des dossiers nécessaires...'
-                bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
-                bat "if not exist ${env.WORKSPACE_DIR}\\reports mkdir ${env.WORKSPACE_DIR}\\reports"
-            }
-        }
+    steps {
+        echo 'Création des dossiers nécessaires...'
+        bat "if not exist ${env.REPORT_DIR} mkdir ${env.REPORT_DIR}"
+        bat "if exist ${env.WORKSPACE_DIR}\\reports rmdir /s /q ${env.WORKSPACE_DIR}\\reports"
+        bat "mkdir ${env.WORKSPACE_DIR}\\reports"
+    }
+}
 
         // Stage 3 : Check Python
         stage('Check Python') {
