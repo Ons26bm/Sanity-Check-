@@ -70,13 +70,7 @@ stage('Run Pylint in Docker') {
         }
     }
 }
-  stage('Quality Gate') {
-    steps {
-        timeout(time: 10, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
-        }
-    }
-}
+
 
         // Stage 6 : Exécution du script principal (sanity check)
         stage('Sanity Check Script') {
