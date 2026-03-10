@@ -50,7 +50,7 @@ stage('Run Pylint in Docker') {
         -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
         -w /workspace ^
         sanity-python:latest ^
-        pylint *.py --output-format=parseable > \"${env.WORKSPACE_DIR}\\reports\\pylint_report.txt\" 2>&1 || exit 0
+        pylint *.py --output-format=parseable > \"${env.WORKSPACE_DIR}\\reports\\pylint_report.json\" 2>&1 || exit 0
         """
     }
 }
@@ -63,7 +63,8 @@ stage('Run Pylint in Docker') {
             sonar-scanner ^
             -Dsonar.projectKey=SanityCheck ^
             -Dsonar.sources=./ ^
-            -Dsonar.python.pylint.reportPaths=reports/pylint_report.txt
+            -Dsonar.python.version=3.12 ^
+            -Dsonar.python.pylint.reportPaths=reports/pylint_report.json
             """
         }
     }
