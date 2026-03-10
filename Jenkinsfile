@@ -39,10 +39,10 @@ stage('Run Pylint in Docker') {
         echo 'Exécution de Pylint pour l’analyse statique du code...'
         bat '''
         docker run --rm ^
-        -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
-        -w /workspace ^
-        sanity-python:latest ^
-        pylint *.py --output-format=checkstyle > reports/pylint_report.xml || exit /b 0
+    -v "C:\ProgramData\Jenkins\.jenkins\workspace\SanityCheckScripts:/workspace" ^
+    -w /workspace ^
+    sanity-python:latest ^
+    sh -c "pip install pylint-json2junit && pylint *.py --output-format=json > pylint.json && pylint-json2junit pylint.json > reports/pylint_report.xml"
         '''
     }
 }
