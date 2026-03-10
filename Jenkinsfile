@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPORT_DIR = "C:\\Autoreports\\SanityCheck"
+        REPORT_DIR = "C:\\Autoreports\\SanityCheck\\reports"
        WORKSPACE_DIR = "${env.WORKSPACE}"
     }
 
@@ -28,7 +28,7 @@ stage('Setup') {
             echo Tentative de suppression du dossier reports...
             rmdir /s /q \"${env.WORKSPACE_DIR}\\reports\" || echo Impossible de supprimer reports, peut être utilisé par un autre processus
         )
-        mkdir \"${env.WORKSPACE_DIR}\\reports\"
+        mkdir \"${env.WORKSPACE_DIR}\\reports\\"
         """
     }
 }
