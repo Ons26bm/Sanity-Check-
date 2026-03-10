@@ -50,7 +50,7 @@ stage('Run Pylint in Docker') {
         -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\SanityCheckScripts:/workspace" ^
         -w /workspace ^
         sanity-python:latest ^
-        pylint *.py --output-format=parseable > reports/pylint_report.txt || exit 0
+        pylint *.py --output-format=parseable >\"reports/pylint_report.txt\" || exit 0
         """
     }
 }
