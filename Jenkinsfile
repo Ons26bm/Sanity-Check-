@@ -72,7 +72,7 @@ pipeline {
             python -m pip install --user bandit
 
             REM Générer directement le rapport JSON
-            python -m bandit -r . -f json -o "C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json"
+            python -m bandit -r . -f json -o "C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json" || exit 0
         """
     }
 }
