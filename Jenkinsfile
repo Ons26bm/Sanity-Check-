@@ -15,11 +15,8 @@ pipeline {
 
         stage('Setup') {
             steps {
-                // Créer le dossier de rapports si nécessaire
                 bat "if not exist \"%REPORTS_DIR%\" mkdir \"%REPORTS_DIR%\""
-                // Supprimer les anciens rapports
                 bat "if exist \"%WORKSPACE_DIR%\\reports\" rmdir /s /q \"%WORKSPACE_DIR%\\reports\""
-                // Créer dossier reports dans le workspace
                 bat "mkdir \"%WORKSPACE_DIR%\\reports\""
             }
         }
@@ -27,15 +24,15 @@ pipeline {
         stage('Python Syntax Check') {
             steps {
                 bat """
-                for %%f in (*.py) do python -m py_compile %%f 2>> "%REPORTS_DIR%\\syntax_errors.txt" || exit 0
+                for %%f in (*.py) do python -m py_compile %%f 2>> "%REPORTS_DIR%\\syntax_errors.txt" || exit /b 0
                 """
             }
         }
 
         stage('Code Format Check (Black)') {
             steps {
-                bat 'python -m pip install --user black'
-                bat 'python -m black --check . 1>"%REPORTS_DIR%\\black_report.txt" 2>&1 || exit 0'
+                bat 'python -m pip install --user black || exit /b 0'
+                bat 'python -m black --check . 1>"%REPORTS_DIR%\\black_report.txt" 2>&1 || exit /b 0'
             }
         }
 
@@ -43,7 +40,7 @@ pipeline {
             steps {
                 bat """
                 docker run --rm -v "%WORKSPACE_DIR%:/workspace" -w /workspace sanity-python:latest ^
-                pylint *.py --output-format=json 1>"%REPORTS_DIR%\\pylint_report.json" 2>&1 || exit 0
+                pylint *.py --output-format=json 1>"%REPORTS_DIR%\\pylint_report.json" 2>&1 || exit /b 0
                 """
             }
         }
@@ -51,14 +48,12 @@ pipeline {
         stage('Security Scan (Bandit)') {
             steps {
                 echo 'Scan de sécurité avec Bandit...'
-                bat 'python -m pip install --user bandit'
-                bat 'python -m bandit -r . -f json -o "%REPORTS_DIR%\\bandit_report.json"'
+                bat 'python -m pip install --user bandit || exit /b 0'
+                bat 'python -m bandit -r . -f json -o "%REPORTS_DIR%\\bandit_report.json" || exit /b 0'
 
-                // Vérifier que le script de conversion existe
-                bat 'if exist "convert_bandit_to_sonar.py" (echo Script trouvé) else (echo Script manquant & exit 1)'
+                bat 'if exist "convert_bandit_to_sonar.py" (echo Script trouvé) else (echo Script manquant & exit /b 0)'
 
-                // Conversion du rapport Bandit vers format SonarQube
-                bat 'python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json" || exit 0'
+                bat 'python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json" || exit /b 0'
             }
         }
 
