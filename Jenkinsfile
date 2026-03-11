@@ -89,7 +89,7 @@ pipeline {
                     -Dsonar.python.version=3.12 ^
                     -Dsonar.exclusions=reports/* ^
                     -Dsonar.python.pylint.reportPaths=reports/pylint_report.json ^
-                    -Dsonar.externalIssuesReportPaths=${REPORT_DIR}/bandit_report.json
+                    -Dsonar.externalIssuesReportPaths=C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json
                     """
                 }
             }
