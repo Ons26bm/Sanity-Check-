@@ -21,11 +21,13 @@ pipeline {
             }
         }
 
-        stage('Python Syntax Check') {
-            steps {
-                bat 'for %f in (*.py) do python -m py_compile %f 2>>"${REPORTS_DIR}\\syntax_errors.txt" || exit 0'
-            }
-        }
+    stage('Python Syntax Check') {
+    steps {
+        bat """
+        for %%f in (*.py) do python -m py_compile %%f 2>> "C:\\Autoreports\\SanityCheck\\reports\\syntax_errors.txt" || exit 0
+        """
+    }
+}
 
         stage('Code Format Check (Black)') {
             steps {
