@@ -72,20 +72,20 @@ pipeline {
         }
 
         // Stage 6 : Security Scan (Bandit)
-           stage('Security Scan (Bandit)') {
-            steps {
-                echo 'Scan de sécurité avec Bandit...'
-                bat """
-                python -m pip install --user bandit
-                python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt || exit 0
-                python convert_bandit_to_sonar.py ${env.REPORT_DIR}\\bandit_report.txt ${env.REPORT_DIR}\\bandit_report.json
-                """
-                    if not exist "${env.REPORT_DIR}\bandit_report.json" (
-        echo "ERREUR : bandit_report.json introuvable!"
-        exit 1
-)
-            }
-        }
+         stage('Security Scan (Bandit)') {
+    steps {
+        echo 'Scan de sécurité avec Bandit...'
+        bat """
+        python -m pip install --user bandit
+        python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt || exit 0
+        python convert_bandit_to_sonar.py ${env.REPORT_DIR}\\bandit_report.txt ${env.REPORT_DIR}\\bandit_report.json
+        if not exist "${env.REPORT_DIR}\\bandit_report.json" (
+            echo ERREUR : bandit_report.json introuvable!
+            exit 1
+        )
+        """
+    }
+}
 
         // Stage 7 : SonarQube Analysis (Dashboard)
         stage('SonarQube Analysis') {
