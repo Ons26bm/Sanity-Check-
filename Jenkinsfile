@@ -64,20 +64,18 @@ pipeline {
             }
         }
 
-        stage('Security Scan (Bandit)') {
-            steps {
-                echo 'Scan de sécurité avec Bandit...'
-                bat """
-                python -m pip install --user bandit
-                python -m bandit -r . -f txt -o "${REPORT_DIR}\\bandit_report.txt" || exit 0
-                python "${WORKSPACE_DIR}\\convert_bandit_to_sonar.py" "${REPORT_DIR}\\bandit_report.txt" "${REPORT_DIR}\\bandit_report.json"
-                if not exist "${REPORT_DIR}\\bandit_report.json" (
-                    echo ERREUR : bandit_report.json introuvable!
-                    exit 1
-                )
-                """
-            }
-        }
+       stage('Security Scan (Bandit)') {
+    steps {
+        echo 'Scan de sécurité avec Bandit...'
+        bat """
+            REM Installer Bandit si nécessaire
+            python -m pip install --user bandit
+
+            REM Générer directement le rapport JSON
+            python -m bandit -r . -f json -o "C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json"
+        """
+    }
+}
 
         stage('SonarQube Analysis') {
             steps {
