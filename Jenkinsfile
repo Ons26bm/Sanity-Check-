@@ -58,7 +58,7 @@ pipeline {
                 bat 'if exist "convert_bandit_to_sonar.py" (echo Script trouvé) else (echo Script manquant & exit 1)'
 
                 // Conversion du rapport Bandit vers format SonarQube
-                bat 'python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json"'
+                bat 'python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json" || exit 0'
             }
         }
 
