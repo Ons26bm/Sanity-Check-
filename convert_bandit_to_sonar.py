@@ -2,6 +2,14 @@ import json
 import sys
 import os
 
+# Mapping Bandit -> SonarQube
+SEVERITY_MAP = {
+    "HIGH": "CRITICAL",
+    "MEDIUM": "MAJOR",
+    "LOW": "MINOR",
+    "UNDEFINED": "INFO"
+}
+
 def convert_bandit_to_sonar(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
         bandit_data = json.load(f)
@@ -9,11 +17,14 @@ def convert_bandit_to_sonar(input_file, output_file):
     sonar_issues = {"issues": []}
 
     for issue in bandit_data.get("results", []):
+        bandit_severity = issue.get("issue_severity", "UNDEFINED").upper()
+        sonar_severity = SEVERITY_MAP.get(bandit_severity, "INFO")
+
         # Préparer l'issue au format SonarQube
         sonar_issue = {
             "engineId": "bandit",
             "ruleId": issue.get("test_id", "unknown"),
-            "severity": issue.get("issue_severity", "MAJOR").upper(),
+            "severity": sonar_severity,
             "type": "VULNERABILITY",
             "primaryLocation": {
                 "message": issue.get("issue_text", "No message provided"),
@@ -31,6 +42,7 @@ def convert_bandit_to_sonar(input_file, output_file):
     # Sauvegarder le JSON au format SonarQube
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(sonar_issues, f, indent=2)
+
     print(f"Conversion terminée : {len(sonar_issues['issues'])} issues générées pour SonarQube")
 
 if __name__ == "__main__":
