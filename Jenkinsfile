@@ -78,6 +78,7 @@ pipeline {
                 bat """
                 python -m pip install --user bandit
                 python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt || exit 0
+                python convert_bandit_to_sonar.py ${env.REPORT_DIR}\\bandit_report.txt ${env.REPORT_DIR}\\bandit_report.json
                 """
             }
         }
@@ -93,6 +94,7 @@ pipeline {
                     -Dsonar.python.version=3.12 ^
                     -Dsonar.exclusions=reports/* ^
                     -Dsonar.python.pylint.reportPaths=reports/pylint_report.json
+                    -Dsonar.externalIssuesReportPaths=${env.REPORT_DIR}/bandit_report.json
                     """
                 }
             }
