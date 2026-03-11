@@ -23,8 +23,8 @@ def convert_bandit_to_sonar(input_file, output_file):
         # Sécurité : corriger les colonnes pour SonarQube
         start_col = issue.get("col_offset", 0)
         end_col = issue.get("end_col_offset", start_col)
-        if end_col < start_col:
-            end_col = start_col
+        if end_col <= start_col:
+            end_col = start_col+1
 
         # Préparer l'issue au format SonarQube
         sonar_issue = {
