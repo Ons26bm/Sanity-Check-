@@ -45,33 +45,39 @@ pipeline {
             }
         }
 
-        stage('Security Scan (Bandit)') {
-            steps {
-                bat 'python -m pip install --user bandit'
-                bat "python -m bandit -r . -f json -o \"${REPORTS_DIR}\\bandit_report.json\" || exit 0"
-                // Conversion JSON Bandit → Sonar
-                bat "python convert_bandit_json_to_sonar.py \"${REPORTS_DIR}\\bandit_report.json\" \"${REPORTS_DIR}\\bandit_report_sonar.json\""
-            }
-        }
+stage('Security Scan (Bandit)') {
+    steps {
+        echo 'Scan de sécurité avec Bandit...'
+        // Installer Bandit si nécessaire
+        bat 'python -m pip install --user bandit'
 
-        stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-            }
-            steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    bat """
-                    sonar-scanner ^
-                        -Dsonar.projectKey=SanityCheck ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.python.version=3.12 ^
-                        -Dsonar.exclusions=reports/* ^
-                        -Dsonar.python.pylint.reportPaths=${REPORTS_DIR}\\pylint_report.json ^
-                        -Dsonar.externalIssuesReportPaths=${REPORTS_DIR}\\bandit_report_sonar.json
-                    """
-                }
-            }
+        // Générer le rapport JSON standard Bandit
+        bat 'python -m bandit -r . -f json -o "C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json"'
+
+        // Vérifier que le fichier de conversion existe dans le workspace
+        bat 'if exist "convert_bandit_to_sonar.py" (echo Script trouvé) else (echo Script manquant & exit 1)'
+
+        // Exécuter le script de conversion pour SonarQube
+        bat 'python convert_bandit_to_sonar.py "C:\\Autoreports\\SanityCheck\\reports\\bandit_report.json" "C:\\Autoreports\\SanityCheck\\reports\\bandit_report_sonar.json"'
+    }
+}
+
+stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQubeServer') {
+            echo 'Analyse SonarQube...'
+            bat '''
+            sonar-scanner ^
+                -Dsonar.projectKey=SanityCheck ^
+                -Dsonar.sources=. ^
+                -Dsonar.python.version=3.12 ^
+                -Dsonar.exclusions=reports/* ^
+                -Dsonar.python.pylint.reportPaths=reports/pylint_report.json ^
+                -Dsonar.externalIssuesReportPaths=C:\\Autoreports\\SanityCheck\\reports\\bandit_report_sonar.json
+            '''
         }
+    }
+}
     }
 
     post {
