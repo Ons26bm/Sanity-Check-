@@ -20,6 +20,12 @@ def convert_bandit_to_sonar(input_file, output_file):
         bandit_severity = issue.get("issue_severity", "UNDEFINED").upper()
         sonar_severity = SEVERITY_MAP.get(bandit_severity, "INFO")
 
+        # Sécurité : corriger les colonnes pour SonarQube
+        start_col = issue.get("col_offset", 0)
+        end_col = issue.get("end_col_offset", start_col)
+        if end_col < start_col:
+            end_col = start_col
+
         # Préparer l'issue au format SonarQube
         sonar_issue = {
             "engineId": "bandit",
@@ -32,8 +38,8 @@ def convert_bandit_to_sonar(input_file, output_file):
                 "textRange": {
                     "startLine": issue.get("line_number", 1),
                     "endLine": issue.get("line_number", 1),
-                    "startColumn": issue.get("col_offset", 0),
-                    "endColumn": issue.get("end_col_offset", 0)
+                    "startColumn": start_col,
+                    "endColumn": end_col
                 }
             }
         }
