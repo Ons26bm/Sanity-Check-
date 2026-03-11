@@ -47,13 +47,15 @@ pipeline {
         }
 
         // Stage 4 : Vérification Format Code (Black)
-        stage('Code Format Check (Black)') {
-            steps {
-                echo 'Vérification du format du code avec Black...'
-                bat "pip install black"
-                bat "black --check . > ${env.REPORT_DIR}\\black_report.txt 2>&1 || exit 0"
-            }
-        }
+      stage('Code Format Check (Black)') {
+    steps {
+        echo 'Vérification du format du code avec Black...'
+        bat """
+        python -m pip install --user black
+        python -m black --check . > ${env.REPORT_DIR}\\black_report.txt 2>&1 || exit 0
+        """
+    }
+}
 
         // Stage 5 : Analyse statique Pylint dans Docker
         stage('Run Pylint') {
