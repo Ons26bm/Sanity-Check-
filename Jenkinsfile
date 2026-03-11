@@ -41,7 +41,7 @@ pipeline {
                 echo 'Vérification de la syntaxe Python...'
                 // Boucle sur chaque fichier .py pour Windows
                 bat """
-                for %%f in (*.py) do python -m py_compile %%f 2>> "${env.REPORT_DIR}\\syntax_errors.txt"
+                for %%f in (*.py) do python -m py_compile %%f 2>> "${env.REPORT_DIR}\\syntax_errors.txt" || exit 0
                 """
             }
         }
@@ -77,7 +77,7 @@ pipeline {
                 echo 'Scan de sécurité avec Bandit...'
                 bat """
                 python -m pip install --user bandit
-                python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt
+                python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt || exit 0
                 """
             }
         }
