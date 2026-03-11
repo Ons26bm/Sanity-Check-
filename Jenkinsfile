@@ -72,11 +72,13 @@ pipeline {
         }
 
         // Stage 6 : Security Scan (Bandit)
-        stage('Security Scan (Bandit)') {
+           stage('Security Scan (Bandit)') {
             steps {
                 echo 'Scan de sécurité avec Bandit...'
-                bat "pip install bandit"
-                bat "bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt"
+                bat """
+                python -m pip install --user bandit
+                python -m bandit -r . -f txt -o ${env.REPORT_DIR}\\bandit_report.txt
+                """
             }
         }
 
