@@ -73,7 +73,7 @@ stage('SonarQube Analysis') {
                 -Dsonar.python.version=3.12 ^
                 -Dsonar.exclusions=reports/* ^
                 -Dsonar.python.pylint.reportPaths=reports/pylint_report.json ^
-                -Dsonar.externalIssuesReportPaths=C:\\Autoreports\\SanityCheck\\reports\\bandit_report_sonar.json
+                -Dsonar.externalIssuesReportPaths=reports/bandit_report_sonar.json
             '''
         }
     }
