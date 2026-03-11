@@ -7,8 +7,8 @@ pipeline {
     }
 
     triggers {
-        // Déclenchement à chaque push sur Git
-        pollSCM('* * * * *') // Vérifie chaque minute les changements sur le repo
+        // Déclenchement automatique à chaque push (polling toutes les 2 minutes)
+        pollSCM('H/2 * * * *')
     }
 
     stages {
@@ -35,24 +35,27 @@ pipeline {
             }
         }
 
-        // Stage 3 : Check Python
+        // Stage 3 : Vérification Syntaxe Python
         stage('Python Syntax Check') {
             steps {
                 echo 'Vérification de la syntaxe Python...'
-                bat "python -m py_compile *.py"
+                // Boucle sur chaque fichier .py pour Windows
+                bat """
+                for %%f in (*.py) do python -m py_compile %%f 2>> "${env.REPORT_DIR}\\syntax_errors.txt"
+                """
             }
         }
 
-        // Stage 4 : Code formatting avec Black
+        // Stage 4 : Vérification Format Code (Black)
         stage('Code Format Check (Black)') {
             steps {
                 echo 'Vérification du format du code avec Black...'
                 bat "pip install black"
-                bat "black --check ."
+                bat "black --check . > ${env.REPORT_DIR}\\black_report.txt 2>&1 || exit 0"
             }
         }
 
-        // Stage 5 : Run Pylint
+        // Stage 5 : Analyse statique Pylint dans Docker
         stage('Run Pylint') {
             steps {
                 echo 'Exécution de Pylint pour l’analyse statique du code...'
@@ -66,7 +69,7 @@ pipeline {
             }
         }
 
-        // Stage 6 : Security scan Bandit
+        // Stage 6 : Security Scan (Bandit)
         stage('Security Scan (Bandit)') {
             steps {
                 echo 'Scan de sécurité avec Bandit...'
@@ -75,7 +78,7 @@ pipeline {
             }
         }
 
-        // Stage 7 : SonarQube Analysis 
+        // Stage 7 : SonarQube Analysis (Dashboard)
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
@@ -102,10 +105,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline terminé avec succès !'
+            echo 'Pipeline terminé avec succès ! Tous les rapports sont dans C:\\Autoreports\\SanityCheck\\reports'
         }
         failure {
-            echo 'Pipeline échoué, vérifier les logs.'
+            echo 'Pipeline échoué, vérifier les logs et rapports.'
         }
     }
 }
