@@ -20,11 +20,27 @@ def convert_bandit_to_sonar(input_file, output_file):
         bandit_severity = issue.get("issue_severity", "UNDEFINED").upper()
         sonar_severity = SEVERITY_MAP.get(bandit_severity, "INFO")
 
-        # Sécurité : corriger les colonnes pour SonarQube
-        start_col = issue.get("col_offset", 0)
+        filename = issue.get("filename", "")
+        line_number = issue.get("line_number", 1)
+
+        # Lecture de la ligne réelle dans le fichier pour ajuster les colonnes
+        start_col = issue.get("col_offset", 1)
         end_col = issue.get("end_col_offset", start_col)
-        if end_col <= start_col:
-            end_col = start_col+1
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            line_index = line_number - 1
+            if 0 <= line_index < len(lines):
+                line_length = len(lines[line_index].rstrip("\n"))
+                start_col = min(max(start_col, 1), line_length)
+                end_col = min(max(end_col, start_col), line_length)
+            else:
+                start_col = 1
+                end_col = start_col
+        except Exception:
+            # fallback si le fichier n'existe pas ou problème de lecture
+            start_col = 1
+            end_col = 1
 
         # Préparer l'issue au format SonarQube
         sonar_issue = {
@@ -34,10 +50,10 @@ def convert_bandit_to_sonar(input_file, output_file):
             "type": "VULNERABILITY",
             "primaryLocation": {
                 "message": issue.get("issue_text", "No message provided"),
-                "filePath": os.path.relpath(issue.get("filename", ""), start=os.getcwd()).replace("\\", "/"),
+                "filePath": os.path.relpath(filename, start=os.getcwd()).replace("\\", "/"),
                 "textRange": {
-                    "startLine": issue.get("line_number", 1),
-                    "endLine": issue.get("line_number", 1),
+                    "startLine": line_number,
+                    "endLine": line_number,
                     "startColumn": start_col,
                     "endColumn": end_col
                 }
