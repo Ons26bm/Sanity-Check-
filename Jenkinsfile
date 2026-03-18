@@ -119,9 +119,6 @@ pipeline {
         always {
             echo "📦 Archivage des rapports..."
 
-            archiveArtifacts artifacts: 'reports/*', fingerprint: true
-
-            echo "📁 Pipeline terminé. Vérifiez les rapports dans %REPORTS_DIR%"
         }
 
         unstable {
