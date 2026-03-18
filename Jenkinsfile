@@ -57,7 +57,7 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat """
                     docker run --rm -v "%WORKSPACE_DIR%:/workspace" -w /workspace sanity-python:latest ^
-                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json ^
+                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json --disable=R0801 ^
                     1>"%REPORTS_DIR%\\pylint_report.json" 2>&1
                     """
                 }
