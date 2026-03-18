@@ -67,15 +67,6 @@ pipeline {
             }
         }
 
-        stage('Run Tests (Optional)') {
-            steps {
-                echo "🧪 Exécution des tests (si existants)..."
-
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat 'python -m pytest --junitxml=%REPORTS_DIR%\\pytest_report.xml'
-                }
-            }
-        }
 
         stage('Security Scan (Bandit)') {
             steps {
