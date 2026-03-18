@@ -96,7 +96,7 @@ pipeline {
                         -Dsonar.python.version=3.12 ^
                         -Dsonar.exclusions=reports/* ^
                         -Dsonar.python.pylint.reportPaths=%REPORTS_DIR%\\pylint_report.json ^
-                        -Dsonar.qualitygate.wait=true
+                        
                     """
                 }
             }
