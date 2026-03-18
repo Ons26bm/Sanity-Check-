@@ -72,7 +72,7 @@ pipeline {
                 echo "🧪 Exécution des tests (si existants)..."
 
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat 'pytest --junitxml=%REPORTS_DIR%\\pytest_report.xml'
+                    bat 'python -m pytest --junitxml=%REPORTS_DIR%\\pytest_report.xml'
                 }
             }
         }
@@ -108,7 +108,6 @@ pipeline {
                         -Dsonar.python.version=3.12 ^
                         -Dsonar.exclusions=reports/* ^
                         -Dsonar.python.pylint.reportPaths=%REPORTS_DIR%\\pylint_report.json ^
-                        -Dsonar.externalIssuesReportPaths=%REPORTS_DIR%\\bandit_report_sonar.json ^
                         -Dsonar.qualitygate.wait=true
                     """
                 }
