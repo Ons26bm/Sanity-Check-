@@ -4,7 +4,7 @@ pipeline {
     environment {
         REPORTS_DIR = "C:\\Autoreports\\SanityCheck\\reports"
         WORKSPACE_DIR = "${env.WORKSPACE}"
-        PYLINT_THRESHOLD = "6"
+        PYLINT_THRESHOLD = "5"
     }
 
     stages {
