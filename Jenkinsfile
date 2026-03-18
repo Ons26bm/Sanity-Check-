@@ -43,15 +43,12 @@ pipeline {
             }
         }
 
-        stage('Code Format Check (Black)') {
-            steps {
-                echo "🎨 Vérification du format du code (Black)..."
-
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat 'python -m black --check . 1>"%REPORTS_DIR%\\black_report.txt" 2>&1'
-                }
-            }
-        }
+      stage('Code Format Fix (Black)') {
+    steps {
+        echo "🎨 Formatage automatique du code avec Black..."
+        bat 'python -m black .'
+    }
+}
 
         stage('Run Pylint') {
             steps {
