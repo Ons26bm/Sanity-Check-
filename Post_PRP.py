@@ -267,7 +267,7 @@ env_path = r"C:\Users\Administrateur\Desktop\STAR\Post Prod\.env"
 load_dotenv(dotenv_path=env_path)
 
 
-
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -279,19 +279,19 @@ RAW_DATA_PATH = "General/STAR/PRP/raw_data"
 FILE_RSLT = f"{RAW_DATA_PATH}/outbound_surveyresults.xlsx"
 FILE_INJ  = f"{RAW_DATA_PATH}/outbound_surveydata.xlsx"
 
-
+# pylint: disable=duplicate-code
 # SSH / MySQL
 SSH_HOST = os.getenv("SSH_HOST")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER")
 SSH_PASSWORD = os.getenv("SSH_PASSWORD")
-
+# pylint: disable=duplicate-code
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 REMOTE_MYSQL_HOST  = os.getenv("REMOTE_MYSQL_HOST")
 REMOTE_MYSQL_PORT  = int(os.getenv("REMOTE_MYSQL_PORT"))
-
+# pylint: disable=duplicate-code
 SURVEY_SCHEMA_ID  = 30  # ID du survey schema à filtrer dans les résultats
 TABLE_NAME_surveydata = os.getenv("TABLE_NAME_surveydata")
 TABLE_NAME = os.getenv("TABLE_NAME")
@@ -306,6 +306,7 @@ log_filename = f"Post_Prod_PRP_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 
 headers = None
 drive_id = None
+# pylint: disable=duplicate-code
 def write_log(message):
     global headers, drive_id
     

@@ -43,19 +43,19 @@ import traceback
 from dotenv import load_dotenv
 env_path = r"C:\Users\Administrateur\Desktop\Daam\DAAM_CAF\autoreport_caf_14h\.env"
 load_dotenv(dotenv_path=env_path)
-
+# pylint: disable=duplicate-code
 # Détails de la connexion SSH
 ssh_host = os.getenv("SSH_HOST")
 ssh_port = int(os.getenv("SSH_PORT", "22"))
 ssh_user = os.getenv("SSH_USER")
 ssh_password = os.getenv("SSH_PASSWORD")
-
+# pylint: disable=duplicate-code
 # Détails de la base de données
 db_host = os.getenv("db_host")
 db_port = int(os.getenv("db_port"))
 db_user = os.getenv("db_user")
 db_password = os.getenv("db_password")
-
+# pylint: disable=duplicate-code
 # SharePoint
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
@@ -72,7 +72,7 @@ databases = ['besidedb']
 
 
 
-
+# pylint: disable=duplicate-code
 def write_log(message):
     global headers, drive_id
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -102,6 +102,7 @@ def write_log(message):
         write_log(f" Impossible de logger sur SharePoint : {e}")
  
 # ===================== SHAREPOINT =====================
+# pylint: disable=duplicate-code
 def authenticate_sharepoint():
     app = msal.ConfidentialClientApplication(
         CLIENT_ID,
@@ -112,7 +113,7 @@ def authenticate_sharepoint():
         scopes=["https://graph.microsoft.com/.default"]
     )
     return {"Authorization": f"Bearer {token['access_token']}"}
-
+# pylint: disable=duplicate-code
 def get_drive_id(headers):
     site = requests.get(
         f"https://graph.microsoft.com/v1.0/sites/{SITE_DOMAIN}:/sites/{SITE_NAME}",

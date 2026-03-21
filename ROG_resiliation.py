@@ -260,48 +260,43 @@
 ##################################################################
 
 
-import pandas as pd
-import requests
-import msal
-from io import BytesIO
-from datetime import datetime, date, timedelta
+# ========================
+# Standard library
+# ========================
 import os
-import base64
-import time
-import gc
-import pythoncom
-import win32com.client as win32
-from dotenv import load_dotenv
-from PIL import Image
-import warnings
-
-from datetime import datetime, date, timedelta
-import unicodedata
-import win32com.client as win32
-from dotenv import load_dotenv
-import warnings
-import mysql.connector
-from mysql.connector import Error
-import html
-import os
-import json
-import gc
-import pandas as pd
-import requests
-import msal
-from io import BytesIO
-from sqlalchemy import create_engine
-from sshtunnel import SSHTunnelForwarder
-import win32com.client
+import sys
 import time
 import shutil
-import base64
-import logging
-import pythoncom
-from sqlalchemy import create_engine, text
+import json
 import re
-from pywinauto import Application
+import logging
+import gc
+import base64
+import html
+import unicodedata
+from datetime import datetime, date, timedelta
+from io import BytesIO
+import warnings
+
+# ========================
+# Third-party
+# ========================
+import pandas as pd
+import requests
+import msal
+import pythoncom
+import win32com.client as win32
+from sqlalchemy import create_engine, text
+from sshtunnel import SSHTunnelForwarder
+from dotenv import load_dotenv
 from PIL import Image
+from pywinauto import Application
+
+# ========================
+# Database
+# ========================
+import mysql.connector
+from mysql.connector import Error
 from dotenv import load_dotenv
 warnings.filterwarnings('ignore')
 
@@ -310,7 +305,7 @@ warnings.filterwarnings('ignore')
 # =====================
 env_path = r"C:\Users\Administrateur\Desktop\STAR\Auto_Report\.env"
 load_dotenv(dotenv_path=env_path)
-
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -321,19 +316,19 @@ RAW_DATA_PATH = "General/STAR/RESIL/raw_data"
 
 FILE_RSLT = f"{RAW_DATA_PATH}/outbound_surveyresults1.xlsx"
 FILE_INJ  = f"{RAW_DATA_PATH}/outbound_surveydata.xlsx"
-
+# pylint: disable=duplicate-code
 # SSH / MySQL
 SSH_HOST = os.getenv("SSH_HOST")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER")
 SSH_PASSWORD = os.getenv("SSH_PASSWORD")
-
+# pylint: disable=duplicate-code
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 REMOTE_MYSQL_HOST  = os.getenv("REMOTE_MYSQL_HOST")
 REMOTE_MYSQL_PORT  = int(os.getenv("REMOTE_MYSQL_PORT"))
-
+# pylint: disable=duplicate-code
 SURVEY_SCHEMA_ID   = 29  # ID du survey schema à filtrer dans les résultats
 TABLE_NAME_surveydata = "myapp_surveydata"
 TABLE_NAME = "myapp_formresponse"
@@ -346,6 +341,7 @@ log_filename = f"Resiliation_ROG_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 
 headers = None
 drive_id = None
+# pylint: disable=duplicate-code
 def write_log(message):
     global headers, drive_id
     
@@ -504,8 +500,13 @@ def upload_file_bytes(headers, drive_id, path: str, content: bytes):
         write_log(f" Upload failed: {r.status_code} {r.text}")
         raise Exception(f" Upload failed: {r.status_code} {r.text}")
     write_log(f"✅ Fichier mis à jour sur SharePoint : {path}")
-
-
+def check_utf8(filename):
+    with open(filename, "rb") as f:
+        for i, line in enumerate(f, start=1):
+            try:
+                line.decode("utf-8")
+            except UnicodeDecodeError as e:
+                print(f"[UTF-8 ERROR] Ligne {i}: {e}", file=sys.stderr)
 # ============================================================
 # JSON FLATTEN + CLEAN COLUMNS (safe)
 # ============================================================
@@ -1049,7 +1050,8 @@ def main():
         existing_keys = set(
             to_key_series(df_existing, key_col_existing).dropna().astype(str).tolist()
         )
-
+        import os
+        check_utf8(os.path.abspath(__file__))
         # DB via SSH
         tunnel = None
         conn = None

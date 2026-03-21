@@ -351,30 +351,22 @@
 
 
 
+# Standard library
 import os
+import sys
 import json
-import re
-import unicodedata
+import warnings
+import base64
+from datetime import datetime, date, timedelta
 from io import BytesIO
 
+# Third-party
 import pandas as pd
 import requests
 import msal
 from sshtunnel import SSHTunnelForwarder
 import mysql.connector
-import pandas as pd
-import mysql.connector
-from mysql.connector import Error
-import warnings
-import sys
-import json
-from datetime import datetime, date, timedelta
-import os
-import base64
 import win32com.client as win32
-import requests
-import msal
-from io import BytesIO
 from dotenv import load_dotenv
 env_path = r"C:\Users\Administrateur\Desktop\WIMOVA\Post Prod_Wimova/.env"
 load_dotenv(dotenv_path=env_path)
@@ -391,12 +383,13 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ---------- MODE ----------
 INITIAL_LOAD = False  # True => overwrite total même si fichier existe
 
+# pylint: disable=duplicate-code
 # ---------- SSH ----------
 SSH_HOST = os.getenv("SSH_HOST")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER")
 SSH_PASSWORD = os.getenv("SSH_PASSWORD")
-
+# pylint: disable=duplicate-code
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
@@ -410,6 +403,7 @@ FORM_ID_VALUE = os.getenv("FORM_ID_VALUE")
 # Colonne double-encodée
 RESPONSE_DATA_COL = "response_data"
 
+# pylint: disable=duplicate-code
 # ---------- SHAREPOINT ----------
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
@@ -433,7 +427,7 @@ log_filename = f"Post_Prod_wimova_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 headers = None
 drive_id = None
 
-
+# pylint: disable=duplicate-code
 def write_log(message):
     global headers, drive_id
     

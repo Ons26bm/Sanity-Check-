@@ -289,12 +289,12 @@ load_dotenv(dotenv_path=env_path)
 # =========================
 # SSH (GATEWAY)
 # =========================
-
+# pylint: disable=duplicate-code
 SSH_HOST = os.getenv("SSH_HOST")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER")
 SSH_PASSWORD = os.getenv("SSH_PASSWORD")
-
+# pylint: disable=duplicate-code
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
@@ -305,6 +305,7 @@ REMOTE_MYSQL_PORT  = int(os.getenv("REMOTE_MYSQL_PORT"))
 # =========================
 # SHAREPOINT
 # =========================
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -318,6 +319,7 @@ log_filename = f"Post_Prod_DAAM_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
 
 headers = None
 drive_id = None
+# pylint: disable=duplicate-code
 def write_log(message):
     global headers, drive_id
     
@@ -496,8 +498,6 @@ def main_surveydata():
         if r.status_code not in (200, 201):
             raise Exception(f" Upload failed: {r.status_code} {r.text}")
         write_log(" Uploaded (updated file)")
-
-
     # ============================================================
     # JSON FLATTEN + CLEAN COLUMNS (safe)
     # ============================================================

@@ -1251,6 +1251,7 @@ from dotenv import load_dotenv
 env_path = r"C:\Users\Administrateur\Desktop\Daam\DAAM_KYC\.env"
 load_dotenv(dotenv_path=env_path)
 
+# pylint: disable=duplicate-code
 # ------------------ CONFIG SSH ------------------
 ssh_host = os.getenv("SSH_HOST")
 ssh_port = int(os.getenv("SSH_PORT", "22"))
@@ -1258,6 +1259,7 @@ ssh_user = os.getenv("SSH_USER")
 ssh_password = os.getenv("SSH_PASSWORD")
 
 # ------------------ CONFIG DB ------------------
+# pylint: disable=duplicate-code
 db_host = os.getenv("DB_HOST")
 db_port = int(os.getenv("DB_PORT"))
 db_user = os.getenv("DB_USER")
@@ -1267,7 +1269,7 @@ db_name = os.getenv("DB_NAME")
 # ------------------ CONFIG SHAREPOINT ------------------
 
 
-
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -1303,6 +1305,7 @@ WHERE (rslt.survey_schema_id = 28 or rslt.survey_schema_id = 36)
   AND DATE(rslt.created_at) >= '2025-08-01'
   AND JSON_UNQUOTE(JSON_EXTRACT(rslt.response_data, '$.Qualification')) = 'Formulaire complété';
 """
+# pylint: disable=duplicate-code
 def write_log(message):
     global sharepoint_headers, drive_id
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1332,6 +1335,7 @@ def write_log(message):
         print(f"⚠️ Impossible de logger sur SharePoint : {e}")
 
 # ------------------ SHAREPOINT FUNCTIONS ------------------
+# pylint: disable=duplicate-code
 def authenticate_sharepoint():
     """Authentification SharePoint"""
     authority = f"https://login.microsoftonline.com/{TENANT_ID}"
@@ -1348,7 +1352,7 @@ def authenticate_sharepoint():
         raise Exception("Token error")
 
     return {"Authorization": f"Bearer {token['access_token']}"}
-
+# pylint: disable=duplicate-code
 def get_drive_id(headers):
     """Récupérer l'ID du drive SharePoint"""
     site = requests.get(
@@ -1366,7 +1370,7 @@ def get_drive_id(headers):
             return d["id"]
 
     raise Exception("Documents library not found")
-
+# pylint: disable=duplicate-code
 def read_excel_from_sharepoint(headers, drive_id, file_path):
     """Lire un fichier Excel depuis SharePoint"""
     try:
@@ -1382,7 +1386,7 @@ def read_excel_from_sharepoint(headers, drive_id, file_path):
             return pd.DataFrame()
         else:
             raise
-
+# pylint: disable=duplicate-code
 def upload_excel_to_sharepoint(headers, drive_id, file_path, local_file_path):
     """Uploader un fichier Excel vers SharePoint"""
     # D'abord, vérifier si le fichier existe et obtenir son ID

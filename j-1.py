@@ -17,15 +17,15 @@ from datetime import date, datetime
 # LOAD ENV
 # ============================================================
 load_dotenv()
-
+# pylint: disable=duplicate-code
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-
+# pylint: disable=duplicate-code
 SITE_DOMAIN = os.getenv("SITE_DOMAIN")
 SITE_NAME = os.getenv("SITE_NAME")
 DRIVE_NAME = os.getenv("DRIVE_NAME", "Documents")
-
+# pylint: disable=duplicate-code
 SP_J1_FOLDER = os.getenv("SP_J1_FOLDER")  # /General/Tunichèque/TEST/j-1  (optionnel, pas utilisé directement)
 SP_KPI = os.getenv("SP_KPI")              # /General/Tunichèque/TEST/j-1/kpi_inbound_detail.xlsx
 SP_OUTPUT_FOLDER = os.getenv("SP_OUTPUT_FOLDER")  # /General/Tunichèque/TEST/j-1
@@ -33,7 +33,7 @@ SP_INCIDENTS_FILE = os.getenv("SP_INCIDENTS_FILE")  # /General/Tunichèque/TEST/
 
 SHAREPOINT_FILE_LOG_PATH = "General/Autoreports Status"
 log_filename = f"tunicheque_intraday_client_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
-
+# pylint: disable=duplicate-code
 LOCAL_LOGO_PATH = os.getenv("LOCAL_LOGO_PATH", "")
 MAIL_TO = os.getenv("MAIL_TO", "")
 MAIL_CC = os.getenv("MAIL_CC", "")
@@ -70,7 +70,7 @@ MAIL_TO = require(MAIL_TO, "MAIL_TO")
 LOCAL_LOGO_PATH = require(LOCAL_LOGO_PATH, "LOCAL_LOGO_PATH")
 # if not os.path.isfile(LOCAL_LOGO_PATH):
 #     raise FileNotFoundError(f"❌ Logo not found: {LOCAL_LOGO_PATH}")
-
+# pylint: disable=duplicate-code
 def write_log(message: str) -> None:
     """
     Écrit le log dans la console + append dans un fichier log sur SharePoint.

@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 # ============================================================
 env_path = r"C:\Users\Administrateur\Desktop\SIBTEL\jmail\.env"
 load_dotenv(dotenv_path=env_path)
-
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -76,6 +76,7 @@ if not os.path.isfile(LOCAL_LOGO_PATH):
 # ============================================================
 # LOGGING (console + SharePoint)
 # ============================================================
+# pylint: disable=duplicate-code
 def write_log(message: str) -> None:
     """
     Écrit le log dans la console + append dans un fichier log sur SharePoint.

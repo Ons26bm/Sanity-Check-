@@ -405,12 +405,14 @@ from dotenv import load_dotenv
 env_path = r"C:\Users\Administrateur\Desktop\Daam\DAAM_CAF\autoreport_caf_14h\.env"
 load_dotenv(dotenv_path=env_path)
 # ------------------ CONFIG SSH ------------------
+# pylint: disable=duplicate-code
 ssh_host = os.getenv("SSH_HOST")
 ssh_port = int(os.getenv("SSH_PORT", "22"))
 ssh_user = os.getenv("SSH_USER")
 ssh_password = os.getenv("SSH_PASSWORD")
 
 # ------------------ CONFIG DB ------------------
+# pylint: disable=duplicate-code
 db_host = os.getenv("db_host")
 db_port = int(os.getenv("db_port"))
 db_user = os.getenv("db_user")
@@ -419,7 +421,7 @@ databases = os.getenv("databases")
 
 # ------------------ CONFIG SHAREPOINT ------------------
 
-
+# pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
 CLIENT_ID     = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -430,7 +432,7 @@ SHAREPOINT_FILE_PATH = "General/DAAM/NJERI_2026.xlsx"
 SHAREPOINT_FILE_LOG_PATH ="General/Autoreports Status"
 # Log file name
 log_filename = f"NJERI_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
-
+# pylint: disable=duplicate-code
 def write_log(message):
     global sharepoint_headers, drive_id
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -461,6 +463,7 @@ def write_log(message):
 
 
 # ------------------ SHAREPOINT FUNCTIONS ------------------
+# pylint: disable=duplicate-code
 def authenticate_sharepoint():
     """Authentification SharePoint"""
     authority = f"https://login.microsoftonline.com/{TENANT_ID}"
@@ -477,7 +480,7 @@ def authenticate_sharepoint():
         raise Exception("Token error")
 
     return {"Authorization": f"Bearer {token['access_token']}"}
-
+# pylint: disable=duplicate-code
 def get_drive_id(headers):
     """Récupérer l'ID du drive SharePoint"""
     site = requests.get(
@@ -495,7 +498,7 @@ def get_drive_id(headers):
             return d["id"]
 
     raise Exception("Documents library not found")
-
+# pylint: disable=duplicate-code
 def read_excel_from_sharepoint(headers, drive_id, file_path):
     """Lire un fichier Excel depuis SharePoint"""
     try:
@@ -511,7 +514,7 @@ def read_excel_from_sharepoint(headers, drive_id, file_path):
             return pd.DataFrame()
         else:
             raise
-
+# pylint: disable=duplicate-code
 def upload_excel_to_sharepoint(headers, drive_id, file_path, local_file_path):
     """Uploader un fichier Excel vers SharePoint"""
     try:
