@@ -266,6 +266,7 @@ warnings.filterwarnings('ignore')
 env_path = r"C:\Users\Administrateur\Desktop\STAR\Post Prod\.env"
 load_dotenv(dotenv_path=env_path)
 b = 20
+c=10
 
 # pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
