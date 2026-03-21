@@ -265,7 +265,7 @@ warnings.filterwarnings('ignore')
 #load_dotenv(dotenv_path=r"C:\Users\Administrateur\Desktop\STAR\Post Prod\STAR\Post Prod\env 9")
 env_path = r"C:\Users\Administrateur\Desktop\STAR\Post Prod\.env"
 load_dotenv(dotenv_path=env_path)
-
+b = 20
 
 # pylint: disable=duplicate-code
 TENANT_ID     = os.getenv("TENANT_ID")
@@ -373,9 +373,6 @@ def to_key_series(df: pd.DataFrame, key_col: str) -> pd.Series:
     s = df[key_col].astype("string")
     s = s.fillna(pd.NA)
     return s
-
-
-
 
 def authenticate():
     """Authentification Microsoft Graph API"""
