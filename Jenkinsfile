@@ -130,8 +130,9 @@ pipeline {
     }
 post {
     always {
+        echo "📧 Envoi email de test (status = ${currentBuild.currentResult})"
         emailext (
-            subject: "Jenkins Build: ${currentBuild.currentResult}",
+            subject: "Jenkins test: ${currentBuild.currentResult}",
             body: """\
 Build Status: ${currentBuild.currentResult}
 Project: ${env.JOB_NAME}
