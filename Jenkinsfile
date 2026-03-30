@@ -142,17 +142,52 @@ pipeline {
     }
 
     post {
-        always {
-            echo "📦 Archivage des rapports..."
+      pipeline {
+    agent any
 
+    environment {
+        REPORTS_DIR = "C:\\Autoreports\\SanityCheck\\reports"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
 
-        unstable {
-            echo "⚠️ Pipeline terminé avec des avertissements (code améliorable)"
+        stage('Setup') {
+            steps {
+                echo "📁 Initialisation des dossiers..."
+                bat """
+                if not exist "${REPORTS_DIR}" mkdir "${REPORTS_DIR}"
+                """
+            }
         }
 
+        // ... tes autres stages (Python Syntax Check, Pylint, Bandit, SonarQube)
+    }
+
+    post {
         failure {
-            echo "❌ Pipeline échoué. Vérifier les erreurs critiques."
+            echo "❌ Pipeline échoué, envoi de l'email..."
+            mail bcc: '', body: """
+            Bonjour,
+
+            Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
+
+            Consultez les logs Jenkins pour plus de détails:
+            ${env.BUILD_URL}console
+
+            Rapport généré (si disponible):
+            ${REPORTS_DIR}
+            """, cc: '', from: 'ons26bm@gmail.com', replyTo: '', subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", to: 'pw39f@ningen-group.com'
         }
+
+        success {
+            echo "✅ Pipeline terminé avec succès."
+        }
+    }
+}
     }
 }
