@@ -128,49 +128,20 @@ pipeline {
             }
         }
     }
-
 post {
-    success {
-        echo "✅ Pipeline terminé avec succès, envoi de l'email..."
-        powershell """
-        \$smtpServer = 'smtp.gmail.com'
-        \$smtpPort = 587
-        \$user = 'rd22z@ningen-group.com'
-        \$pass = 'Cctsnlrvqwnrsrsh '  # Mot de passe d'application Gmail
-        \$msg = New-Object System.Net.Mail.MailMessage
-        \$msg.From = \$user
-        \$msg.To.Add('pw39f@ningen-group.com')
-        \$msg.Subject = '✅ Pipeline Réussi: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
-        \$msg.Body = @"
-Bonjour,
-
-Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} s'est terminé avec succès.
-
-Consultez le dashboard SonarQube:
-http://localhost:9000/dashboard?id=SanityCheck
-
-Rapport généré:
-${REPORTS_DIR}
-"@
-        \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
-        \$smtp.EnableSsl = \$true
-        \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$user, \$pass)
-        \$smtp.Send(\$msg)
-        """
-    }
-
     failure {
         echo "❌ Pipeline échoué, envoi de l'email..."
-        powershell """
-        \$smtpServer = 'smtp.gmail.com'
-        \$smtpPort = 587
-        \$user = 'rd22z@ningen-group.com'
-        \$pass = 'Cctsnlrvqwnrsrsh '  # Mot de passe d'application Gmail
-        \$msg = New-Object System.Net.Mail.MailMessage
-        \$msg.From = \$user
-        \$msg.To.Add('pw39f@ningen-group.com')
-        \$msg.Subject = '❌ Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
-        \$msg.Body = @"
+        withCredentials([usernamePassword(credentialsId: '250c147c-d818-494a-ae1b-420ec192a09b', 
+                                          usernameVariable: 'EMAIL_USER', 
+                                          passwordVariable: 'EMAIL_PASS')]) {
+            powershell """
+            \$smtpServer = 'smtp.gmail.com'
+            \$smtpPort = 587
+            \$msg = New-Object System.Net.Mail.MailMessage
+            \$msg.From = \$env:EMAIL_USER
+            \$msg.To.Add('pw39f@ningen-group.com')
+            \$msg.Subject = '❌ Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
+            \$msg.Body = @"
 Bonjour,
 
 Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
@@ -181,11 +152,12 @@ ${env.BUILD_URL}console
 Rapport généré (si disponible):
 ${REPORTS_DIR}
 "@
-        \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
-        \$smtp.EnableSsl = \$true
-        \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$user, \$pass)
-        \$smtp.Send(\$msg)
-        """
+            \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
+            \$smtp.EnableSsl = \$true
+            \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$env:EMAIL_USER, \$env:EMAIL_PASS)
+            \$smtp.Send(\$msg)
+            """
+        }
     }
 }
 }
