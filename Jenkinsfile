@@ -143,7 +143,7 @@ http://localhost:9000/dashboard?id=SanityCheck
 Rapport généré:
 ${REPORTS_DIR}
 """,
-        cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
+        cc: '', from: 'rd22z@ningen-group.com', replyTo: '', 
         subject: "Pipeline Réussi: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
         to: 'pw39f@ningen-group.com'
     }
@@ -161,7 +161,7 @@ ${env.BUILD_URL}console
 Rapport généré (si disponible):
 ${REPORTS_DIR}
 """,
-        cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
+        cc: '', from: 'rd22z@ningen-group.com', replyTo: '', 
         subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
         to: 'pw39f@ningen-group.com'
     }
