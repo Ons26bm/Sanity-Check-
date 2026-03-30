@@ -130,7 +130,7 @@ pipeline {
     }
 post {
     always {
-        withCredentials([usernamePassword(credentialsId: 'gmail-creds', 
+        withCredentials([usernamePassword(credentialsId: 'smtp-creds', 
                                   usernameVariable: 'SMTP_USER', 
                                   passwordVariable: 'SMTP_PASS')]) {
     mail to: 'pw39f@ningen-group.com',
