@@ -130,28 +130,20 @@ pipeline {
     }
 post {
     always {
-        withCredentials([usernamePassword(credentialsId: 'smtp-creds', 
-                                          usernameVariable: 'SMTP_USER', 
-                                          passwordVariable: 'SMTP_PASS')]) {
-            mail bcc: '', 
-                 body: """\
+        withCredentials([usernamePassword(credentialsId: 'gmail-creds', 
+                                  usernameVariable: 'SMTP_USER', 
+                                  passwordVariable: 'SMTP_PASS')]) {
+    mail to: 'pw39f@ningen-group.com',
+         from: SMTP_USER,
+         replyTo: SMTP_USER,
+         subject: "Jenkins Build Notification: ${currentBuild.fullDisplayName}",
+         body: """\
 Build Status: ${currentBuild.currentResult}
 Project: ${env.JOB_NAME}
 Build Number: ${env.BUILD_NUMBER}
 Build URL: ${env.BUILD_URL}
-""",
-                 charset: 'UTF-8',
-                 from: SMTP_USER,
-                 replyTo: SMTP_USER,
-                 subject: "Jenkins Build Notification: ${currentBuild.fullDisplayName}",
-                 to: 'pw39f@ningen-group.com',
-                 smtpHost: 'smtp.gmail.com',
-                 smtpPort: 587,
-                 useSsl: false,    // SSL off pour 587
-                 useTls: true,
-                 smtpAuthUser: SMTP_USER,
-                 smtpAuthPassword: SMTP_PASS
-        }
+"""
+}
     }
 }
 }
