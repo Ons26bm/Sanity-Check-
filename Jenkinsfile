@@ -129,35 +129,14 @@ pipeline {
         }
     }
 post {
-    failure {
-        echo "❌ Pipeline échoué, envoi de l'email..."
-        withCredentials([usernamePassword(credentialsId: '250c147c-d818-494a-ae1b-420ec192a09b', 
-                                          usernameVariable: 'EMAIL_USER', 
-                                          passwordVariable: 'EMAIL_PASS')]) {
-            powershell """
-            \$smtpServer = 'smtp.gmail.com'
-            \$smtpPort = 587
-            \$msg = New-Object System.Net.Mail.MailMessage
-            \$msg.From = \$env:EMAIL_USER
-            \$msg.To.Add('pw39f@ningen-group.com')
-            \$msg.Subject = '❌ Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
-            \$msg.Body = @"
-Bonjour,
-
-Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
-
-Consultez les logs Jenkins pour plus de détails:
-${env.BUILD_URL}console
-
-Rapport généré (si disponible):
-${REPORTS_DIR}
-"@
-            \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
-            \$smtp.EnableSsl = \$true
-            \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$env:EMAIL_USER, \$env:EMAIL_PASS)
-            \$smtp.Send(\$msg)
-            """
+     always {
+            mail to: 'pw39f@ningen-group.com',
+                 subject: "Jenkins Build Notification: ${currentBuild.fullDisplayName}",
+                 body: """\
+                 Build Status: ${currentBuild.currentResult}
+                 Project: ${env.JOB_NAME}
+                 Build Number: ${env.BUILD_NUMBER}
+                 Build URL: ${env.BUILD_URL}
+                 """
         }
-    }
-}
 }
