@@ -129,10 +129,19 @@ pipeline {
         }
     }
 
-   post {
+post {
     success {
         echo "✅ Pipeline terminé avec succès, envoi de l'email..."
-        mail bcc: '', body: """
+        powershell """
+        \$smtpServer = 'smtp.gmail.com'
+        \$smtpPort = 587
+        \$user = 'rd22z@ningen-group.com'
+        \$pass = 'Cctsnlrvqwnrsrsh '  # Mot de passe d'application Gmail
+        \$msg = New-Object System.Net.Mail.MailMessage
+        \$msg.From = \$user
+        \$msg.To.Add('pw39f@ningen-group.com')
+        \$msg.Subject = '✅ Pipeline Réussi: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
+        \$msg.Body = @"
 Bonjour,
 
 Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} s'est terminé avec succès.
@@ -142,15 +151,26 @@ http://localhost:9000/dashboard?id=SanityCheck
 
 Rapport généré:
 ${REPORTS_DIR}
-""",
-        cc: '', from: 'rd22z@ningen-group.com', replyTo: '', 
-        subject: "Pipeline Réussi: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
-        to: 'pw39f@ningen-group.com'
+"@
+        \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
+        \$smtp.EnableSsl = \$true
+        \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$user, \$pass)
+        \$smtp.Send(\$msg)
+        """
     }
 
     failure {
         echo "❌ Pipeline échoué, envoi de l'email..."
-        mail bcc: '', body: """
+        powershell """
+        \$smtpServer = 'smtp.gmail.com'
+        \$smtpPort = 587
+        \$user = 'rd22z@ningen-group.com'
+        \$pass = 'Cctsnlrvqwnrsrsh '  # Mot de passe d'application Gmail
+        \$msg = New-Object System.Net.Mail.MailMessage
+        \$msg.From = \$user
+        \$msg.To.Add('pw39f@ningen-group.com')
+        \$msg.Subject = '❌ Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}'
+        \$msg.Body = @"
 Bonjour,
 
 Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
@@ -160,10 +180,12 @@ ${env.BUILD_URL}console
 
 Rapport généré (si disponible):
 ${REPORTS_DIR}
-""",
-        cc: '', from: 'rd22z@ningen-group.com', replyTo: '', 
-        subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
-        to: 'pw39f@ningen-group.com'
+"@
+        \$smtp = New-Object System.Net.Mail.SmtpClient(\$smtpServer, \$smtpPort)
+        \$smtp.EnableSsl = \$true
+        \$smtp.Credentials = New-Object System.Net.NetworkCredential(\$user, \$pass)
+        \$smtp.Send(\$msg)
+        """
     }
 }
 }
