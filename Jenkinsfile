@@ -101,24 +101,21 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
+       stage('Quality Gate') {
     steps {
         echo "🚦 Vérification Quality Gate via SonarQube API..."
 
-        // Utilisation de credentials Jenkins (à créer dans Jenkins : ID = sonar-creds)
         withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
                                           usernameVariable: 'SONAR_USER', 
                                           passwordVariable: 'SONAR_PASS')]) {
             script {
-                import groovy.json.JsonSlurper
-
                 // Appel API SonarQube pour récupérer le status Quality Gate
                 def response = bat(returnStdout: true, script: """
                     curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
                 """).trim()
 
-                // Parsing JSON
-                def json = new JsonSlurper().parseText(response)
+                // Parsing JSON sans import
+                def json = new groovy.json.JsonSlurper().parseText(response)
 
                 // Vérification du status
                 if (json.projectStatus.status == 'ERROR') {
