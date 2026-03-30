@@ -8,7 +8,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/Ons26bm/Sanity-Check-.git'
@@ -18,7 +17,6 @@ pipeline {
         stage('Setup') {
             steps {
                 echo "📁 Initialisation des dossiers..."
-
                 bat "if not exist \"%REPORTS_DIR%\" mkdir \"%REPORTS_DIR%\""
                 bat "if exist \"%WORKSPACE_DIR%\\reports\" rmdir /s /q \"%WORKSPACE_DIR%\\reports\""
                 bat "mkdir \"%WORKSPACE_DIR%\\reports\""
@@ -43,17 +41,16 @@ pipeline {
             }
         }
 
-      stage('Code Format Fix (Black)') {
-    steps {
-        echo "🎨 Formatage automatique du code avec Black..."
-        bat 'python -m black .'
-    }
-}
+        stage('Code Format Fix (Black)') {
+            steps {
+                echo "🎨 Formatage automatique du code avec Black..."
+                bat 'python -m black .'
+            }
+        }
 
         stage('Run Pylint') {
             steps {
                 echo "📊 Analyse qualité du code avec Pylint..."
-
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat """
                     docker run --rm -v "%WORKSPACE_DIR%:/workspace" -w /workspace sanity-python:latest ^
@@ -64,15 +61,12 @@ pipeline {
             }
         }
 
-
         stage('Security Scan (Bandit)') {
             steps {
                 echo "🔐 Scan de sécurité avec Bandit..."
-
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat 'python -m bandit -r . -f json -o "%REPORTS_DIR%\\bandit_report.json"'
                 }
-
                 bat '''
                 if exist "convert_bandit_to_sonar.py" (
                     echo ✅ Conversion Bandit → Sonar
@@ -87,7 +81,6 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo "📈 Analyse avec SonarQube..."
-
                 withSonarQubeEnv('SonarQubeServer') {
                     bat """
                     sonar-scanner ^
@@ -95,38 +88,33 @@ pipeline {
                         -Dsonar.sources=. ^
                         -Dsonar.python.version=3.12 ^
                         -Dsonar.exclusions=reports/* ^
-                        -Dsonar.python.pylint.reportPaths=%REPORTS_DIR%\\pylint_report.json ^
-                        
+                        -Dsonar.python.pylint.reportPaths=%REPORTS_DIR%\\pylint_report.json
                     """
                 }
             }
         }
-       stage('Quality Gate') {
-    steps {
-        echo "🚦 Vérification Quality Gate via SonarQube API..."
 
-        withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
-                                          usernameVariable: 'SONAR_USER', 
-                                          passwordVariable: 'SONAR_PASS')]) {
-            script {
-                // Appel API SonarQube pour récupérer le status Quality Gate
-                def response = bat(returnStdout: true, script: """
-                    curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
-                """).trim()
+        stage('Quality Gate') {
+            steps {
+                echo "🚦 Vérification Quality Gate via SonarQube API..."
+                withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
+                                                  usernameVariable: 'SONAR_USER', 
+                                                  passwordVariable: 'SONAR_PASS')]) {
+                    script {
+                        def response = bat(returnStdout: true, script: """
+                            curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
+                        """).trim()
 
-                // Parsing JSON sans import
-                def json = new groovy.json.JsonSlurper().parseText(response)
-
-                // Vérification du status
-                if (json.projectStatus.status == 'ERROR') {
-                    error "❌ Quality Gate failed!"
-                } else {
-                    echo "✅ Quality Gate passed"
+                        def json = new groovy.json.JsonSlurper().parseText(response)
+                        if (json.projectStatus.status == 'ERROR') {
+                            error "❌ Quality Gate failed!"
+                        } else {
+                            echo "✅ Quality Gate passed"
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
         stage('Summary') {
             steps {
@@ -142,52 +130,26 @@ pipeline {
     }
 
     post {
-      pipeline {
-    agent any
-
-    environment {
-        REPORTS_DIR = "C:\\Autoreports\\SanityCheck\\reports"
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Setup') {
-            steps {
-                echo "📁 Initialisation des dossiers..."
-                bat """
-                if not exist "${REPORTS_DIR}" mkdir "${REPORTS_DIR}"
-                """
-            }
-        }
-
-        // ... tes autres stages (Python Syntax Check, Pylint, Bandit, SonarQube)
-    }
-
-    post {
         failure {
             echo "❌ Pipeline échoué, envoi de l'email..."
             mail bcc: '', body: """
-            Bonjour,
+Bonjour,
 
-            Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
+Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
 
-            Consultez les logs Jenkins pour plus de détails:
-            ${env.BUILD_URL}console
+Consultez les logs Jenkins pour plus de détails:
+${env.BUILD_URL}console
 
-            Rapport généré (si disponible):
-            ${REPORTS_DIR}
-            """, cc: '', from: 'ons26bm@gmail.com', replyTo: '', subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", to: 'pw39f@ningen-group.com'
+Rapport généré (si disponible):
+${REPORTS_DIR}
+""",
+            cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
+            subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
+            to: 'pw39f@ningen-group.com'
         }
 
         success {
             echo "✅ Pipeline terminé avec succès."
         }
-    }
-}
     }
 }
