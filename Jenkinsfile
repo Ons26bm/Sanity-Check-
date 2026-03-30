@@ -129,10 +129,28 @@ pipeline {
         }
     }
 
-    post {
-        failure {
-            echo "❌ Pipeline échoué, envoi de l'email..."
-            mail bcc: '', body: """
+   post {
+    success {
+        echo "✅ Pipeline terminé avec succès, envoi de l'email..."
+        mail bcc: '', body: """
+Bonjour,
+
+Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} s'est terminé avec succès.
+
+Consultez le dashboard SonarQube:
+http://localhost:9000/dashboard?id=SanityCheck
+
+Rapport généré:
+${REPORTS_DIR}
+""",
+        cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
+        subject: "Pipeline Réussi: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
+        to: 'pw39f@ningen-group.com'
+    }
+
+    failure {
+        echo "❌ Pipeline échoué, envoi de l'email..."
+        mail bcc: '', body: """
 Bonjour,
 
 Le pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} a échoué.
@@ -143,13 +161,9 @@ ${env.BUILD_URL}console
 Rapport généré (si disponible):
 ${REPORTS_DIR}
 """,
-            cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
-            subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
-            to: 'pw39f@ningen-group.com'
-        }
-
-        success {
-            echo "✅ Pipeline terminé avec succès."
-        }
+        cc: '', from: 'ons26bm@gmail.com', replyTo: '', 
+        subject: "Pipeline Échec: ${env.JOB_NAME} #${env.BUILD_NUMBER}", 
+        to: 'pw39f@ningen-group.com'
     }
+}
 }
