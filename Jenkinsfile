@@ -166,7 +166,7 @@ pipeline {
                 }
             }
         }
-
+    }
      post {
     always {
         echo "📧 Envoi email..."
