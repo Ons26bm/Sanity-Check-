@@ -63,21 +63,38 @@ pipeline {
         }
 
 
-        stage('Security Scan (Bandit)') {
+         stage('Security Scan (Bandit)') {
             steps {
-                echo "🔐 Scan sécurité avec Bandit..."
+                echo "🔐 Scan de sécurité avec Bandit..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat 'python -m bandit -r . -f json -o "%REPORTS_DIR%\\bandit_report.json"'
                 }
+                bat '''
+                if exist "convert_bandit_to_sonar.py" (
+                    echo ✅ Conversion Bandit → Sonar
+                    python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json"
+                ) else (
+                    echo ⚠️ Script de conversion manquant
+                )
+                '''
             }
         }
 
-        stage('Dependency Scan (pip-audit)') {
-            steps {
-                echo "📦 Analyse dépendances avec pip-audit..."
-                bat 'python -m pip_audit --json > "%REPORTS_DIR%\\pip_audit_report.json"'
-            }
+             stage('Dependency Scan (pip-audit)') {
+    steps {
+        echo "🔍 Analyse des dépendances Python avec pip-audit..."
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            bat """
+            python -m pip_audit --format json > "%REPORTS_DIR%\\pip_audit_report.json"
+            """
         }
+
+        // Optionnel : afficher le résumé dans la console
+        bat """
+        type "%REPORTS_DIR%\\pip_audit_report.json"
+        """
+    }
+}
 
         stage('Run Sanity Check on Sample Data') {
             steps {
