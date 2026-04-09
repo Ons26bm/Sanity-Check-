@@ -178,14 +178,20 @@ stage('Generate HTML Report') {
     }
 }
     }
-     post {
+  post {
     always {
-        echo "📧 Envoi email..."
-
+        script {
+            def reportFile = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+            def reportExists = fileExists(reportFile)
+            echo "📄 Rapport existe : ${reportExists}"
+        }
         emailext (
             subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
-            body: "Le pipeline est terminé. Voir rapport en pièce jointe.",
-            attachmentsPattern: "C:\\Autoreports\\SanityCheck\\reports\\*.html",
+            body: """Le pipeline est terminé.
+Build: ${currentBuild.displayName}
+Résultat: ${currentBuild.currentResult}
+Voir rapport en pièce jointe.""",
+            attachmentsPattern: "reports/sanity_check_report.html",
             to: "pw39f@ningen-group.com"
         )
     }
