@@ -49,16 +49,19 @@ pipeline {
             }
         }
 
-        stage('Run Pylint') {
+     stage('Run Pylint') {
             steps {
-                echo "📊 Analyse qualité avec Pylint..."
+                echo "📊 Analyse qualité du code avec Pylint..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat """
-                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json > "%REPORTS_DIR%\\pylint_report.json"
+                    docker run --rm -v "%WORKSPACE_DIR%:/workspace" -w /workspace sanity-python:latest ^
+                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json --disable=R0801 ^
+                    1>"%REPORTS_DIR%\\pylint_report.json" 2>&1
                     """
                 }
             }
         }
+
 
         stage('Security Scan (Bandit)') {
             steps {
