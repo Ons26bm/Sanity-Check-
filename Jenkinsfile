@@ -170,11 +170,18 @@ pipeline {
         stage('Email Report') {
             steps {
                 echo "📧 Envoi email au data analyst..."
-                emailext (
-                    subject: "Sanity Check - Résumé Scripts Python",
-                    body: "Le rapport HTML est disponible ici: ${REPORTS_DIR}\\sanity_check_report.html",
-                    to: "pw39f@ningen-group.com"
-                )
+            emailext (
+            subject: "Jenkins test: ${currentBuild.currentResult}",
+            body: """\
+Build Status: ${currentBuild.currentResult}
+Project: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+"Le rapport HTML est disponible ici: ${REPORTS_DIR}\\sanity_check_report.html",
+""",
+            to: "pw39f@ningen-group.com"
+        )
+
             }
         }
     }
