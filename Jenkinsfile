@@ -26,7 +26,7 @@ pipeline {
         stage('Install Tools') {
             steps {
                 echo "⚙️ Installation des outils Python..."
-                bat 'python -m pip install --user black pylint bandit pytest'
+                bat 'python -m pip install --user black pylint bandit pytest pip-audit'
             }
         }
 
@@ -77,6 +77,21 @@ pipeline {
                 '''
             }
         }
+        stage('Dependency Scan (pip-audit)') {
+    steps {
+        echo "🔍 Analyse des dépendances Python avec pip-audit..."
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            bat """
+            python -m pip_audit --format json > "%REPORTS_DIR%\\pip_audit_report.json"
+            """
+        }
+
+        // Optionnel : afficher le résumé dans la console
+        bat """
+        type "%REPORTS_DIR%\\pip_audit_report.json"
+        """
+    }
+}
 
         stage('SonarQube Analysis') {
             steps {
