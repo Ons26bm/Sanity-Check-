@@ -167,28 +167,16 @@ pipeline {
             }
         }
 
-        stage('Email Report') {
-            steps {
-                echo "📧 Envoi email au data analyst..."
-            emailext (
-            subject: "Jenkins test: ${currentBuild.currentResult}",
-            body: """\
-Build Status: ${currentBuild.currentResult}
-Project: ${env.JOB_NAME}
-Build Number: ${env.BUILD_NUMBER}
-Build URL: ${env.BUILD_URL}
-"Le rapport HTML est disponible ici: ${REPORTS_DIR}\\sanity_check_report.html",
-""",
+     post {
+    always {
+        echo "📧 Envoi email..."
+
+        emailext (
+            subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
+            body: "Le pipeline est terminé. Voir rapport en pièce jointe.",
+            attachmentsPattern: "C:\\Autoreports\\SanityCheck\\reports\\*.html",
             to: "pw39f@ningen-group.com"
         )
-
-            }
-        }
     }
-
-    post {
-        always {
-            echo "🔔 Pipeline terminé avec status = ${currentBuild.currentResult}"
-        }
-    }
+}
 }
