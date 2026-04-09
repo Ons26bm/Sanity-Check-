@@ -109,7 +109,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+  stage('SonarQube Analysis') {
             steps {
                 echo "📈 Analyse avec SonarQube..."
                 withSonarQubeEnv('SonarQubeServer') {
@@ -124,10 +124,9 @@ pipeline {
                 }
             }
         }
-
         stage('Quality Gate') {
             steps {
-                echo "🚦 Vérification Quality Gate SonarQube..."
+                echo "🚦 Vérification Quality Gate via SonarQube API..."
                 withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
                                                   usernameVariable: 'SONAR_USER', 
                                                   passwordVariable: 'SONAR_PASS')]) {
@@ -135,6 +134,7 @@ pipeline {
                         def response = bat(returnStdout: true, script: """
                             curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
                         """).trim()
+
                         def json = new groovy.json.JsonSlurper().parseText(response)
                         if (json.projectStatus.status == 'ERROR') {
                             error "❌ Quality Gate failed!"
