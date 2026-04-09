@@ -124,50 +124,59 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
-            steps {
-                echo "🚦 Vérification Quality Gate via SonarQube API..."
-                withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
-                                                  usernameVariable: 'SONAR_USER', 
-                                                  passwordVariable: 'SONAR_PASS')]) {
-                    script {
-                        def response = bat(returnStdout: true, script: """
-                            curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
-                        """).trim()
+     stage('Quality Gate') {
+    steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            withCredentials([usernamePassword(credentialsId: 'sonar-creds',
+                                              usernameVariable: 'SONAR_USER',
+                                              passwordVariable: 'SONAR_PASS')]) {
+                script {
+                    def response = bat(returnStdout: true, script: """
+                        @echo off
+                        curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
+                    """).trim()
 
-                        def json = new groovy.json.JsonSlurper().parseText(response)
-                        if (json.projectStatus.status == 'ERROR') {
-                            error "❌ Quality Gate failed!"
-                        } else {
-                            echo "✅ Quality Gate passed"
-                        }
+                    def jsonStart = response.indexOf('{')
+                    def jsonText = response.substring(jsonStart)
+                    def json = new groovy.json.JsonSlurper().parseText(jsonText)
+
+                    if (json.projectStatus.status == 'ERROR') {
+                        error "❌ Quality Gate failed!"
+                    } else {
+                        echo "✅ Quality Gate passed"
                     }
                 }
             }
         }
+    }
+}
 
-        stage('Generate HTML Report') {
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+stage('Generate HTML Report') {
+    steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            script {
                 echo "📄 Génération rapport HTML consolidé..."
-                script {
-                    def html = """
-                        <html><body>
-                        <h2>Sanity Check Résumé</h2>
-                        <ul>
-                            <li>✅ Syntaxe : ${fileExists("${REPORTS_DIR}/syntax_errors.txt") ? "❌ erreurs" : "✔️ OK"}</li>
-                            <li>📊 Pylint : <a href="pylint_report.json">Voir JSON</a></li>
-                            <li>🔐 Bandit : <a href="bandit_report.json">Voir JSON</a></li>
-                            <li>📦 pip-audit : <a href="pip_audit_report.json">Voir JSON</a></li>
-                            <li>🧪 Exécution scripts : fichiers *_results.txt</li>
-                        </ul>
-                        </body></html>
-                    """
-                    writeFile file: "${REPORTS_DIR}/sanity_check_report.html", text: html
-                }
-                }
+                def syntaxStatus = fileExists("${REPORTS_DIR}\\syntax_errors.txt") ? "❌ Erreurs détectées" : "✔️ OK"
+                def html = """<!DOCTYPE html>
+<html><head><meta charset='UTF-8'><title>Sanity Check Report</title></head>
+<body>
+<h2>Sanity Check Résumé</h2>
+<ul>
+    <li>🔍 Syntaxe : ${syntaxStatus}</li>
+    <li>📊 Pylint : <a href='pylint_report.json'>Voir JSON</a></li>
+    <li>🔐 Bandit : <a href='bandit_report.json'>Voir JSON</a></li>
+    <li>📦 pip-audit : <a href='pip_audit_report.json'>Voir JSON</a></li>
+    <li>🧪 Exécution scripts : fichiers *_results.txt</li>
+</ul>
+</body></html>"""
+                writeFile file: "${REPORTS_DIR}\\sanity_check_report.html", text: html
+                // Copie aussi dans le workspace pour l'email
+                bat "copy \"${REPORTS_DIR}\\sanity_check_report.html\" \"${WORKSPACE_DIR}\\reports\\sanity_check_report.html\""
+                echo "✅ Rapport HTML généré"
             }
         }
+    }
+}
     }
      post {
     always {
