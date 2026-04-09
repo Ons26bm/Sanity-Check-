@@ -174,7 +174,7 @@ pipeline {
         emailext (
             subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
             body: "Le pipeline est terminé. Voir rapport en pièce jointe.",
-            attachmentsPattern: "C:\Autoreports\SanityCheck\reports\*.html",
+            attachmentsPattern: "C:\\Autoreports\\SanityCheck\\reports\\*.html",
             to: "pw39f@ningen-group.com"
         )
     }
