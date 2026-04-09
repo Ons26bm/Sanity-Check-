@@ -5,6 +5,7 @@ pipeline {
         REPORTS_DIR = "C:\\Autoreports\\SanityCheck\\reports"
         WORKSPACE_DIR = "${env.WORKSPACE}"
         PYLINT_THRESHOLD = "5"
+        SAMPLE_DATA = "C:\\Autoreports\\SanityCheck\\sample_data"
     }
 
     stages {
@@ -25,14 +26,14 @@ pipeline {
 
         stage('Install Tools') {
             steps {
-                echo "⚙️ Installation des outils Python..."
+                echo "⚙️ Installation outils Python..."
                 bat 'python -m pip install --user black pylint bandit pytest pip-audit'
             }
         }
 
         stage('Python Syntax Check') {
             steps {
-                echo "🔍 Vérification de la syntaxe Python..."
+                echo "🔍 Vérification syntaxe Python..."
                 bat """
                 for %%f in (*.py) do (
                     python -m py_compile %%f 2>> "%REPORTS_DIR%\\syntax_errors.txt"
@@ -43,19 +44,17 @@ pipeline {
 
         stage('Code Format Fix (Black)') {
             steps {
-                echo "🎨 Formatage automatique du code avec Black..."
+                echo "🎨 Formatage code avec Black..."
                 bat 'python -m black .'
             }
         }
 
         stage('Run Pylint') {
             steps {
-                echo "📊 Analyse qualité du code avec Pylint..."
+                echo "📊 Analyse qualité avec Pylint..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat """
-                    docker run --rm -v "%WORKSPACE_DIR%:/workspace" -w /workspace sanity-python:latest ^
-                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json --disable=R0801 ^
-                    1>"%REPORTS_DIR%\\pylint_report.json" 2>&1
+                    pylint *.py --fail-under=%PYLINT_THRESHOLD% --output-format=json > "%REPORTS_DIR%\\pylint_report.json"
                     """
                 }
             }
@@ -63,35 +62,32 @@ pipeline {
 
         stage('Security Scan (Bandit)') {
             steps {
-                echo "🔐 Scan de sécurité avec Bandit..."
+                echo "🔐 Scan sécurité avec Bandit..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                     bat 'python -m bandit -r . -f json -o "%REPORTS_DIR%\\bandit_report.json"'
                 }
-                bat '''
-                if exist "convert_bandit_to_sonar.py" (
-                    echo ✅ Conversion Bandit → Sonar
-                    python convert_bandit_to_sonar.py "%REPORTS_DIR%\\bandit_report.json" "%REPORTS_DIR%\\bandit_report_sonar.json"
-                ) else (
-                    echo ⚠️ Script de conversion manquant
-                )
-                '''
             }
         }
+
         stage('Dependency Scan (pip-audit)') {
-    steps {
-        echo "🔍 Analyse des dépendances Python avec pip-audit..."
-        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            bat """
-            python -m pip_audit --format json > "%REPORTS_DIR%\\pip_audit_report.json"
-            """
+            steps {
+                echo "📦 Analyse dépendances avec pip-audit..."
+                bat 'python -m pip_audit --json > "%REPORTS_DIR%\\pip_audit_report.json"'
+            }
         }
 
-        // Optionnel : afficher le résumé dans la console
-        bat """
-        type "%REPORTS_DIR%\\pip_audit_report.json"
-        """
-    }
-}
+        stage('Run Sanity Check on Sample Data') {
+            steps {
+                echo "🧪 Exécution scripts sur données échantillons..."
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    bat """
+                    for %%f in (*.py) do (
+                        python %%f "%SAMPLE_DATA%" > "%REPORTS_DIR%\\%%~nf_results.txt" 2>&1
+                    )
+                    """
+                }
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
@@ -111,7 +107,7 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                echo "🚦 Vérification Quality Gate via SonarQube API..."
+                echo "🚦 Vérification Quality Gate SonarQube..."
                 withCredentials([usernamePassword(credentialsId: 'sonar-creds', 
                                                   usernameVariable: 'SONAR_USER', 
                                                   passwordVariable: 'SONAR_PASS')]) {
@@ -119,7 +115,6 @@ pipeline {
                         def response = bat(returnStdout: true, script: """
                             curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
                         """).trim()
-
                         def json = new groovy.json.JsonSlurper().parseText(response)
                         if (json.projectStatus.status == 'ERROR') {
                             error "❌ Quality Gate failed!"
@@ -131,31 +126,42 @@ pipeline {
             }
         }
 
-        stage('Summary') {
+        stage('Generate HTML Report') {
             steps {
-                echo "📋 ===== Résumé Sanity Check ====="
-                echo "✔️ Syntaxe vérifiée"
-                echo "🎨 Format Black (voir rapport)"
-                echo "📊 Pylint (seuil = ${PYLINT_THRESHOLD})"
-                echo "🧪 Tests exécutés (si présents)"
-                echo "🔐 Sécurité analysée (Bandit)"
-                echo "📈 Résultats disponibles dans SonarQube"
+                echo "📄 Génération rapport HTML consolidé..."
+                script {
+                    def html = """
+                        <html><body>
+                        <h2>Sanity Check Résumé</h2>
+                        <ul>
+                            <li>✅ Syntaxe : ${fileExists("${REPORTS_DIR}/syntax_errors.txt") ? "❌ erreurs" : "✔️ OK"}</li>
+                            <li>📊 Pylint : <a href="pylint_report.json">Voir JSON</a></li>
+                            <li>🔐 Bandit : <a href="bandit_report.json">Voir JSON</a></li>
+                            <li>📦 pip-audit : <a href="pip_audit_report.json">Voir JSON</a></li>
+                            <li>🧪 Exécution scripts : fichiers *_results.txt</li>
+                        </ul>
+                        </body></html>
+                    """
+                    writeFile file: "${REPORTS_DIR}/sanity_check_report.html", text: html
+                }
+            }
+        }
+
+        stage('Email Report') {
+            steps {
+                echo "📧 Envoi email au data analyst..."
+                emailext (
+                    subject: "Sanity Check - Résumé Scripts Python",
+                    body: "Le rapport HTML est disponible ici: ${REPORTS_DIR}\\sanity_check_report.html",
+                    to: "pw39f@ningen-group.com"
+                )
             }
         }
     }
-post {
-    always {
-        echo "📧 Envoi email de test (status = ${currentBuild.currentResult})"
-        emailext (
-            subject: "Jenkins test: ${currentBuild.currentResult}",
-            body: """\
-Build Status: ${currentBuild.currentResult}
-Project: ${env.JOB_NAME}
-Build Number: ${env.BUILD_NUMBER}
-Build URL: ${env.BUILD_URL}
-""",
-            to: "pw39f@ningen-group.com"
-        )
+
+    post {
+        always {
+            echo "🔔 Pipeline terminé avec status = ${currentBuild.currentResult}"
+        }
     }
-}
 }
