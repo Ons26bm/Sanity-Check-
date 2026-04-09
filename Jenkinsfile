@@ -148,6 +148,7 @@ pipeline {
 
         stage('Generate HTML Report') {
             steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                 echo "📄 Génération rapport HTML consolidé..."
                 script {
                     def html = """
@@ -163,6 +164,7 @@ pipeline {
                         </body></html>
                     """
                     writeFile file: "${REPORTS_DIR}/sanity_check_report.html", text: html
+                }
                 }
             }
         }
