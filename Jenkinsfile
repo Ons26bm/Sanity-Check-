@@ -103,29 +103,48 @@ pipeline {
             def auditRaw   = readFile("${REPORTS_DIR}\\pip_audit_report.json")
 
             def prompt = """
-            Tu es un expert en qualité de code Python.
-            Voici les résultats d'une analyse automatique de scripts Python :
+Tu es un expert en qualité de code Python.
 
-            PYLINT : ${pylintRaw.take(3000)}
-            BANDIT : ${banditRaw.take(3000)}
-            PIP-AUDIT : ${auditRaw.take(2000)}
+PYLINT:
+${pylintRaw.take(1000)}
 
-            Génère un résumé en français avec :
-            1. Les 3 problèmes les plus critiques à corriger en priorité
-            2. Les problèmes qui peuvent attendre
-            3. Une estimation du temps de correction
-            4. Des exemples de correction pour chaque problème critique
-            """
+BANDIT:
+${banditRaw.take(1000)}
 
+PIP-AUDIT:
+${auditRaw.take(1000)}
+
+Donne un résumé clair en français avec :
+1. Problèmes critiques
+2. Problèmes mineurs
+3. Temps de correction
+4. Solutions
+"""
+
+            // ✔️ écrire le JSON dans un fichier
+            writeFile file: "request.json", text: """
+{
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "role": "user",
+      "content": "${prompt.replace('"','\\"')}"
+    }
+  ]
+}
+"""
+
+            // ✔️ appel API propre
+            withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]){
             def response = bat(returnStdout: true, script: """
                 curl -s -X POST https://api.anthropic.com/v1/messages ^
                 -H "x-api-key: %ANTHROPIC_API_KEY%" ^
                 -H "anthropic-version: 2023-06-01" ^
                 -H "content-type: application/json" ^
-                -d "{\\"model\\":\\"claude-sonnet-4-20250514\\",\\"max_tokens\\":1024,\\"messages\\":[{\\"role\\":\\"user\\",\\"content\\":\\"${prompt.replace('"', '\\"')}\\"}]}"
+                --data @request.json
             """).trim()
 
-            // Injecter le résumé IA dans le rapport HTML
             env.AI_SUMMARY = response
         }
     }
