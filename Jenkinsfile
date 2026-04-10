@@ -136,23 +136,65 @@ Donne un résumé clair en français avec :
 """
 
             // ✔️ appel API propre
-            withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]){
-            def response = bat(returnStdout: true, script: """
-             bat """
+   stage('AI Report Summary') {
+    steps {
+        script {
+
+            def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
+            def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
+            def auditRaw   = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+
+            def prompt = """
+Tu es un expert en qualité de code Python.
+
+PYLINT:
+${pylintRaw.take(1000)}
+
+BANDIT:
+${banditRaw.take(1000)}
+
+PIP-AUDIT:
+${auditRaw.take(1000)}
+
+Donne un résumé clair en français avec :
+1. Problèmes critiques
+2. Problèmes mineurs
+3. Temps de correction
+4. Solutions
+"""
+
+            writeFile file: "request.json", text: """
+{
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "role": "user",
+      "content": "${prompt.replace('"','\\"')}"
+    }
+  ]
+}
+"""
+
+            withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
+
+                def response = bat(
+                    returnStdout: true,
+                    script: """
 curl -s -X POST https://api.anthropic.com/v1/messages ^
 -H "x-api-key: %ANTHROPIC_API_KEY%" ^
 -H "anthropic-version: 2023-06-01" ^
 -H "content-type: application/json" ^
---data @request.json > ai_response.json
+--data @request.json
 """
-            """).trim()
+                ).trim()
 
-          echo "Claude raw response: ${response}"
-          env.AI_SUMMARY = response
+                echo "Claude raw response: ${response}"
+                env.AI_SUMMARY = response
+            }
         }
     }
 }
-        }
 
         stage('Run Sanity Check on Sample Data') {
             steps {
