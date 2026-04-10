@@ -145,7 +145,8 @@ Donne un résumé clair en français avec :
                 --data @request.json
             """).trim()
 
-            env.AI_SUMMARY = response
+          echo "Claude raw response: ${response}"
+          env.AI_SUMMARY = response
         }
     }
 }
@@ -407,7 +408,7 @@ if (env.AI_SUMMARY) {
   <span class='${auditClass}'>${auditSummary}</span>
   ${auditDetail}
 </div>
-
+${aiSection} 
 </body>
 </html>"""
 
