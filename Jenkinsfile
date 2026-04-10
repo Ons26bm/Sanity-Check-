@@ -1,4 +1,4 @@
-c quoi le problème : pipeline {
+ pipeline {
     agent any
 
     environment {
