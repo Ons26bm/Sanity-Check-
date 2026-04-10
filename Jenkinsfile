@@ -95,6 +95,41 @@ pipeline {
         """
     }
 }
+        stage('AI Report Summary') {
+    steps {
+        script {
+            def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
+            def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
+            def auditRaw   = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+
+            def prompt = """
+            Tu es un expert en qualité de code Python.
+            Voici les résultats d'une analyse automatique de scripts Python :
+
+            PYLINT : ${pylintRaw.take(3000)}
+            BANDIT : ${banditRaw.take(3000)}
+            PIP-AUDIT : ${auditRaw.take(2000)}
+
+            Génère un résumé en français avec :
+            1. Les 3 problèmes les plus critiques à corriger en priorité
+            2. Les problèmes qui peuvent attendre
+            3. Une estimation du temps de correction
+            4. Des exemples de correction pour chaque problème critique
+            """
+
+            def response = bat(returnStdout: true, script: """
+                curl -s -X POST https://api.anthropic.com/v1/messages ^
+                -H "x-api-key: %ANTHROPIC_API_KEY%" ^
+                -H "anthropic-version: 2023-06-01" ^
+                -H "content-type: application/json" ^
+                -d "{\\"model\\":\\"claude-sonnet-4-20250514\\",\\"max_tokens\\":1024,\\"messages\\":[{\\"role\\":\\"user\\",\\"content\\":\\"${prompt.replace('"', '\\"')}\\"}]}"
+            """).trim()
+
+            // Injecter le résumé IA dans le rapport HTML
+            env.AI_SUMMARY = response
+        }
+    }
+}
 
         stage('Run Sanity Check on Sample Data') {
             steps {
@@ -278,6 +313,24 @@ stage('Generate HTML Report') {
                         auditClass   = "warn"
                     }
                 }
+                // Récupérer le résumé IA
+def aiSection = ""
+if (env.AI_SUMMARY) {
+    // Extraire uniquement le texte de la réponse Claude
+    try {
+        def aiJson = new groovy.json.JsonSlurper()
+                         .parseText(env.AI_SUMMARY)
+        def aiText = aiJson.content[0].text
+                           .replace("\n", "<br>")
+        aiSection = """
+        <div class='card ai-card'>
+            <span class='label'>Analyse IA — Résumé et priorités</span>
+            <div class='ai-content'>${aiText}</div>
+        </div>"""
+    } catch(e) {
+        aiSection = "<div class='card warn'>Résumé IA non disponible</div>"
+    }
+}
 
                 // ── 5. CONSTRUCTION HTML ────────────────────────────────────
                 def html = """<!DOCTYPE html>
