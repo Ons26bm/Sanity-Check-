@@ -138,11 +138,13 @@ Donne un résumé clair en français avec :
             // ✔️ appel API propre
             withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]){
             def response = bat(returnStdout: true, script: """
-                curl -s -X POST https://api.anthropic.com/v1/messages ^
-                -H "x-api-key: %ANTHROPIC_API_KEY%" ^
-                -H "anthropic-version: 2023-06-01" ^
-                -H "content-type: application/json" ^
-                --data @request.json
+             bat """
+curl -s -X POST https://api.anthropic.com/v1/messages ^
+-H "x-api-key: %ANTHROPIC_API_KEY%" ^
+-H "anthropic-version: 2023-06-01" ^
+-H "content-type: application/json" ^
+--data @request.json > ai_response.json
+"""
             """).trim()
 
           echo "Claude raw response: ${response}"
