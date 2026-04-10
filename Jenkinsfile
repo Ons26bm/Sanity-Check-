@@ -134,6 +134,8 @@ Donne un résumé clair en français avec :
   ]
 }
 }
+}
+}
 """
 
             // ✔️ appel API propre
