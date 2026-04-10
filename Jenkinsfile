@@ -149,6 +149,7 @@ Donne un résumé clair en français avec :
         }
     }
 }
+        }
 
         stage('Run Sanity Check on Sample Data') {
             steps {
