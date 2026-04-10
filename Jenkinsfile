@@ -1,8 +1,4 @@
-Démarré par l'utilisateur Ons Ben Maaouia
-Obtained Jenkinsfile from git https://github.com/Ons26bm/Sanity-Check-.git
-org.codehaus.groovy.control.MultipleCompilationErrorsException: startup failed:
-WorkflowScript: 493: expecting '}', found '' @ line 493, column 1.
-1 error: pipeline {
+pipeline {
     agent any
 
     environment {
