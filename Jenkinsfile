@@ -106,22 +106,38 @@ pipeline {
                         ? readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8").take(1000)
                         : "non disponible"
 
-                    def prompt = """Tu es un expert en qualité de code Python.
+                    def prompt = """Tu es un expert en qualité de code Python spécialisé dans les pipelines de données (ETL, scripts d'analyse, traitement de fichiers).
 
-PYLINT:
+CONTEXTE : Ces scripts sont utilisés par un data analyst. Les problèmes qui bloquent l'exécution ou exposent des données sont prioritaires. Les conventions de style sont secondaires.
+
+=== RAPPORT PYLINT (qualité du code) ===
 ${pylintRaw}
 
-BANDIT:
+=== RAPPORT BANDIT (sécurité) ===
 ${banditRaw}
 
-PIP-AUDIT:
+=== RAPPORT PIP-AUDIT (vulnérabilités dépendances) ===
 ${auditRaw}
 
-Donne un résumé clair en français avec :
-1. Problèmes critiques
-2. Problèmes mineurs
-3. Temps de correction
-4. Solutions"""
+=== INSTRUCTIONS ===
+Analyse ces rapports et réponds UNIQUEMENT avec ce format, sans introduction ni conclusion générique :
+
+## 🔴 Bloquant (à corriger avant toute exécution)
+Pour chaque problème : [fichier:ligne] — description concrète — risque réel pour les données
+
+## 🟡 À corriger cette semaine
+Pour chaque problème : [fichier:ligne] — description concrète — impact sur la maintenabilité
+
+## 🟢 Dépendances vulnérables
+Pour chaque CVE : paquet@version — CVE — commande de mise à jour exacte
+
+## ⚡ Actions immédiates (copier-coller)
+Maximum 3 commandes shell ou corrections de code, les plus impactantes uniquement
+
+## ⏱ Estimation
+Bloquant: Xh | Cette semaine: Xh | Total: Xh
+
+Ne génère pas de conseils génériques. Si une section est vide, écris "Aucun problème détecté"."""
 
                     // ✅ JsonOutput échappe proprement guillemets, retours à la ligne et backslashes
                     def requestBody = groovy.json.JsonOutput.toJson([
