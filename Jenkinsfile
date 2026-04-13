@@ -49,7 +49,7 @@ pipeline {
             }
         }
 
-     stage('Run Pylint') {
+        stage('Run Pylint') {
             steps {
                 echo "📊 Analyse qualité du code avec Pylint..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
@@ -62,8 +62,7 @@ pipeline {
             }
         }
 
-
-         stage('Security Scan (Bandit)') {
+        stage('Security Scan (Bandit)') {
             steps {
                 echo "🔐 Scan de sécurité avec Bandit..."
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
@@ -80,29 +79,28 @@ pipeline {
             }
         }
 
-             stage('Dependency Scan (pip-audit)') {
-    steps {
-        echo "🔍 Analyse des dépendances Python avec pip-audit..."
-        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            bat """
-            python -m pip_audit --format json > "%REPORTS_DIR%\\pip_audit_report.json"
-            """
+        stage('Dependency Scan (pip-audit)') {
+            steps {
+                echo "🔍 Analyse des dépendances Python avec pip-audit..."
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    bat """
+                    python -m pip_audit --format json > "%REPORTS_DIR%\\pip_audit_report.json"
+                    """
+                }
+                bat """
+                type "%REPORTS_DIR%\\pip_audit_report.json"
+                """
+            }
         }
 
-        // Optionnel : afficher le résumé dans la console
-        bat """
-        type "%REPORTS_DIR%\\pip_audit_report.json"
-        """
-    }
-}
         stage('AI Report Summary') {
-    steps {
-        script {
-            def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
-            def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
-            def auditRaw   = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+            steps {
+                script {
+                    def pylintRaw = readFile("${REPORTS_DIR}\\pylint_report.json")
+                    def banditRaw = readFile("${REPORTS_DIR}\\bandit_report.json")
+                    def auditRaw  = readFile("${REPORTS_DIR}\\pip_audit_report.json")
 
-            def prompt = """
+                    def prompt = """
 Tu es un expert en qualité de code Python.
 
 PYLINT:
@@ -121,83 +119,37 @@ Donne un résumé clair en français avec :
 4. Solutions
 """
 
-            // ✔️ écrire le JSON dans un fichier
-            writeFile file: "request.json", text: """
+                    writeFile file: "request.json", text: """
 {
   "model": "claude-sonnet-4-20250514",
   "max_tokens": 1024,
   "messages": [
     {
       "role": "user",
-      "content": "${prompt.replace('"','\\"')}"
-    }
-  ]
-}
-}
-}
-}
-"""
-
-            // ✔️ appel API propre
-   stage('AI Report Summary') {
-    steps {
-        script {
-
-            def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
-            def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
-            def auditRaw   = readFile("${REPORTS_DIR}\\pip_audit_report.json")
-
-            def prompt = """
-Tu es un expert en qualité de code Python.
-
-PYLINT:
-${pylintRaw.take(1000)}
-
-BANDIT:
-${banditRaw.take(1000)}
-
-PIP-AUDIT:
-${auditRaw.take(1000)}
-
-Donne un résumé clair en français avec :
-1. Problèmes critiques
-2. Problèmes mineurs
-3. Temps de correction
-4. Solutions
-"""
-
-            writeFile file: "request.json", text: """
-{
-  "model": "claude-sonnet-4-20250514",
-  "max_tokens": 1024,
-  "messages": [
-    {
-      "role": "user",
-      "content": "${prompt.replace('"','\\"')}"
+      "content": "${prompt.replace('"', '\\"')}"
     }
   ]
 }
 """
 
-            withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
-
-                def response = bat(
-                    returnStdout: true,
-                    script: """
+                    withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
+                        def response = bat(
+                            returnStdout: true,
+                            script: """
 curl -s -X POST https://api.anthropic.com/v1/messages ^
 -H "x-api-key: %ANTHROPIC_API_KEY%" ^
 -H "anthropic-version: 2023-06-01" ^
 -H "content-type: application/json" ^
 --data @request.json
 """
-                ).trim()
+                        ).trim()
 
-                echo "Claude raw response: ${response}"
-                env.AI_SUMMARY = response
+                        echo "Claude raw response: ${response}"
+                        env.AI_SUMMARY = response
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Run Sanity Check on Sample Data') {
             steps {
@@ -212,7 +164,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
             }
         }
 
-  stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 echo "📈 Analyse avec SonarQube..."
                 withSonarQubeEnv('SonarQubeServer') {
@@ -227,181 +179,174 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                 }
             }
         }
-     stage('Quality Gate') {
-    steps {
-        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            withCredentials([usernamePassword(credentialsId: 'sonar-creds',
-                                              usernameVariable: 'SONAR_USER',
-                                              passwordVariable: 'SONAR_PASS')]) {
-                script {
-                    def response = bat(returnStdout: true, script: """
-                        @echo off
-                        curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
-                    """).trim()
 
-                    def jsonStart = response.indexOf('{')
-                    def jsonText = response.substring(jsonStart)
-                    def json = new groovy.json.JsonSlurper().parseText(jsonText)
+        stage('Quality Gate') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    withCredentials([usernamePassword(credentialsId: 'sonar-creds',
+                                                      usernameVariable: 'SONAR_USER',
+                                                      passwordVariable: 'SONAR_PASS')]) {
+                        script {
+                            def response = bat(returnStdout: true, script: """
+                                @echo off
+                                curl -s -u %SONAR_USER%:%SONAR_PASS% "http://localhost:9000/api/qualitygates/project_status?projectKey=SanityCheck"
+                            """).trim()
 
-                    if (json.projectStatus.status == 'ERROR') {
-                        error "❌ Quality Gate failed!"
-                    } else {
-                        echo "✅ Quality Gate passed"
+                            def jsonStart = response.indexOf('{')
+                            def jsonText  = response.substring(jsonStart)
+                            def json      = new groovy.json.JsonSlurper().parseText(jsonText)
+
+                            if (json.projectStatus.status == 'ERROR') {
+                                error "❌ Quality Gate failed!"
+                            } else {
+                                echo "✅ Quality Gate passed"
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-}
 
-stage('Generate HTML Report') {
-    steps {
-        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            script {
-                echo "Generation rapport HTML consolide..."
+        stage('Generate HTML Report') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    script {
+                        echo "Generation rapport HTML consolide..."
 
-                // ── 1. SYNTAXE ──────────────────────────────────────────────
-                def syntaxContent = ""
-                if (fileExists("${REPORTS_DIR}\\syntax_errors.txt")) {
-                    syntaxContent = readFile("${REPORTS_DIR}\\syntax_errors.txt").trim()
-                }
-                def syntaxStatus = syntaxContent.isEmpty() ? "OK" : "Erreurs detectees"
-                def syntaxClass  = syntaxContent.isEmpty() ? "ok" : "fail"
-                def syntaxDetail = syntaxContent.isEmpty() ? "" : """
-                    <pre class='detail fail-bg'>${syntaxContent}</pre>"""
-
-                // ── 2. PYLINT ───────────────────────────────────────────────
-                def pylintSummary = "Rapport non disponible"
-                def pylintClass   = "warn"
-                def pylintDetail  = ""
-                if (fileExists("${REPORTS_DIR}\\pylint_report.json")) {
-                    try {
-                        def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
-                        def pylintJson = new groovy.json.JsonSlurper().parseText(pylintRaw)
-
-                        // Le JSON Pylint est une liste de messages
-                        def errors   = pylintJson.count { it.type == "error"   }
-                        def warnings = pylintJson.count { it.type == "warning" }
-                        def conventions = pylintJson.count { it.type == "convention" }
-
-                        // Score global (dernière entrée de type statistics)
-                        def scoreEntry = pylintJson.find { it.type == "statement" }
-                        def score = scoreEntry ? scoreEntry.score : "N/A"
-
-                        pylintSummary = "Score : ${score}/10 | Erreurs : ${errors} | Warnings : ${warnings} | Conventions : ${conventions}"
-                        pylintClass   = errors > 0 ? "fail" : (warnings > 0 ? "warn" : "ok")
-
-                        // Détail des 10 premiers messages d'erreur
-                        def topErrors = pylintJson.findAll { it.type == "error" }.take(10)
-                        if (topErrors) {
-                            def rows = topErrors.collect { msg ->
-                                "<tr><td>${msg.path ?: ''}</td><td>${msg.line ?: ''}</td><td>${msg.message ?: ''}</td></tr>"
-                            }.join("\n")
-                            pylintDetail = """
-                            <table class='detail-table'>
-                                <tr><th>Fichier</th><th>Ligne</th><th>Message</th></tr>
-                                ${rows}
-                            </table>"""
+                        // ── 1. SYNTAXE ──────────────────────────────────────
+                        def syntaxContent = ""
+                        if (fileExists("${REPORTS_DIR}\\syntax_errors.txt")) {
+                            syntaxContent = readFile("${REPORTS_DIR}\\syntax_errors.txt").trim()
                         }
-                    } catch (e) {
-                        pylintSummary = "Erreur lecture rapport : ${e.message}"
-                        pylintClass   = "warn"
-                    }
-                }
+                        def syntaxStatus = syntaxContent.isEmpty() ? "OK" : "Erreurs detectees"
+                        def syntaxClass  = syntaxContent.isEmpty() ? "ok" : "fail"
+                        def syntaxDetail = syntaxContent.isEmpty() ? "" : """
+                            <pre class='detail fail-bg'>${syntaxContent}</pre>"""
 
-                // ── 3. BANDIT ───────────────────────────────────────────────
-                def banditSummary = "Rapport non disponible"
-                def banditClass   = "warn"
-                def banditDetail  = ""
-                if (fileExists("${REPORTS_DIR}\\bandit_report.json")) {
-                    try {
-                        def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
-                        def banditJson = new groovy.json.JsonSlurper().parseText(banditRaw)
+                        // ── 2. PYLINT ───────────────────────────────────────
+                        def pylintSummary = "Rapport non disponible"
+                        def pylintClass   = "warn"
+                        def pylintDetail  = ""
+                        if (fileExists("${REPORTS_DIR}\\pylint_report.json")) {
+                            try {
+                                def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
+                                def pylintJson = new groovy.json.JsonSlurper().parseText(pylintRaw)
 
-                        def high   = banditJson.results.count { it.issue_severity == "HIGH"   }
-                        def medium = banditJson.results.count { it.issue_severity == "MEDIUM" }
-                        def low    = banditJson.results.count { it.issue_severity == "LOW"    }
+                                def errors      = pylintJson.count { it.type == "error"      }
+                                def warnings    = pylintJson.count { it.type == "warning"    }
+                                def conventions = pylintJson.count { it.type == "convention" }
+                                def scoreEntry  = pylintJson.find  { it.type == "statement"  }
+                                def score       = scoreEntry ? scoreEntry.score : "N/A"
 
-                        banditSummary = "HIGH : ${high} | MEDIUM : ${medium} | LOW : ${low}"
-                        banditClass   = high > 0 ? "fail" : (medium > 0 ? "warn" : "ok")
+                                pylintSummary = "Score : ${score}/10 | Erreurs : ${errors} | Warnings : ${warnings} | Conventions : ${conventions}"
+                                pylintClass   = errors > 0 ? "fail" : (warnings > 0 ? "warn" : "ok")
 
-                        // Détail des problèmes HIGH et MEDIUM
-                        def topIssues = banditJson.results
-                            .findAll { it.issue_severity in ["HIGH", "MEDIUM"] }
-                            .take(10)
-                        if (topIssues) {
-                            def rows = topIssues.collect { issue ->
-                                def sevClass = issue.issue_severity == "HIGH" ? "fail" : "warn"
-                                "<tr><td class='${sevClass}'>${issue.issue_severity}</td><td>${issue.filename ?: ''}</td><td>${issue.line_number ?: ''}</td><td>${issue.issue_text ?: ''}</td></tr>"
-                            }.join("\n")
-                            banditDetail = """
-                            <table class='detail-table'>
-                                <tr><th>Severite</th><th>Fichier</th><th>Ligne</th><th>Probleme</th></tr>
-                                ${rows}
-                            </table>"""
+                                def topErrors = pylintJson.findAll { it.type == "error" }.take(10)
+                                if (topErrors) {
+                                    def rows = topErrors.collect { msg ->
+                                        "<tr><td>${msg.path ?: ''}</td><td>${msg.line ?: ''}</td><td>${msg.message ?: ''}</td></tr>"
+                                    }.join("\n")
+                                    pylintDetail = """
+                                    <table class='detail-table'>
+                                        <tr><th>Fichier</th><th>Ligne</th><th>Message</th></tr>
+                                        ${rows}
+                                    </table>"""
+                                }
+                            } catch (e) {
+                                pylintSummary = "Erreur lecture rapport : ${e.message}"
+                                pylintClass   = "warn"
+                            }
                         }
-                    } catch (e) {
-                        banditSummary = "Erreur lecture rapport : ${e.message}"
-                        banditClass   = "warn"
-                    }
-                }
 
-                // ── 4. PIP-AUDIT ────────────────────────────────────────────
-                def auditSummary = "Rapport non disponible"
-                def auditClass   = "warn"
-                def auditDetail  = ""
-                if (fileExists("${REPORTS_DIR}\\pip_audit_report.json")) {
-                    try {
-                        def auditRaw  = readFile("${REPORTS_DIR}\\pip_audit_report.json")
-                        def auditJson = new groovy.json.JsonSlurper().parseText(auditRaw)
+                        // ── 3. BANDIT ───────────────────────────────────────
+                        def banditSummary = "Rapport non disponible"
+                        def banditClass   = "warn"
+                        def banditDetail  = ""
+                        if (fileExists("${REPORTS_DIR}\\bandit_report.json")) {
+                            try {
+                                def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
+                                def banditJson = new groovy.json.JsonSlurper().parseText(banditRaw)
 
-                        // pip-audit retourne { dependencies: [ { name, version, vulns: [] } ] }
-                        def allVulns = auditJson.dependencies.findAll { it.vulns && it.vulns.size() > 0 }
-                        def totalVulns = allVulns.sum { it.vulns.size() } ?: 0
+                                def high   = banditJson.results.count { it.issue_severity == "HIGH"   }
+                                def medium = banditJson.results.count { it.issue_severity == "MEDIUM" }
+                                def low    = banditJson.results.count { it.issue_severity == "LOW"    }
 
-                        auditSummary = totalVulns == 0
-                            ? "Aucune vulnerabilite detectee"
-                            : "${totalVulns} vulnerabilite(s) sur ${allVulns.size()} paquet(s)"
-                        auditClass = totalVulns == 0 ? "ok" : "fail"
+                                banditSummary = "HIGH : ${high} | MEDIUM : ${medium} | LOW : ${low}"
+                                banditClass   = high > 0 ? "fail" : (medium > 0 ? "warn" : "ok")
 
-                        if (allVulns) {
-                            def rows = allVulns.collect { dep ->
-                                dep.vulns.collect { v ->
-                                    "<tr><td>${dep.name} ${dep.version}</td><td>${v.id ?: ''}</td><td>${v.description ?: ''}</td><td>${v.fix_versions?.join(', ') ?: 'N/A'}</td></tr>"
-                                }.join("\n")
-                            }.join("\n")
-                            auditDetail = """
-                            <table class='detail-table'>
-                                <tr><th>Paquet</th><th>CVE</th><th>Description</th><th>Version corrigee</th></tr>
-                                ${rows}
-                            </table>"""
+                                def topIssues = banditJson.results
+                                    .findAll { it.issue_severity in ["HIGH", "MEDIUM"] }
+                                    .take(10)
+                                if (topIssues) {
+                                    def rows = topIssues.collect { issue ->
+                                        def sevClass = issue.issue_severity == "HIGH" ? "fail" : "warn"
+                                        "<tr><td class='${sevClass}'>${issue.issue_severity}</td><td>${issue.filename ?: ''}</td><td>${issue.line_number ?: ''}</td><td>${issue.issue_text ?: ''}</td></tr>"
+                                    }.join("\n")
+                                    banditDetail = """
+                                    <table class='detail-table'>
+                                        <tr><th>Severite</th><th>Fichier</th><th>Ligne</th><th>Probleme</th></tr>
+                                        ${rows}
+                                    </table>"""
+                                }
+                            } catch (e) {
+                                banditSummary = "Erreur lecture rapport : ${e.message}"
+                                banditClass   = "warn"
+                            }
                         }
-                    } catch (e) {
-                        auditSummary = "Erreur lecture rapport : ${e.message}"
-                        auditClass   = "warn"
-                    }
-                }
-                // Récupérer le résumé IA
-def aiSection = ""
-if (env.AI_SUMMARY) {
-    // Extraire uniquement le texte de la réponse Claude
-    try {
-        def aiJson = new groovy.json.JsonSlurper()
-                         .parseText(env.AI_SUMMARY)
-        def aiText = aiJson.content[0].text
-                           .replace("\n", "<br>")
-        aiSection = """
-        <div class='card ai-card'>
-            <span class='label'>Analyse IA — Résumé et priorités</span>
-            <div class='ai-content'>${aiText}</div>
-        </div>"""
-    } catch(e) {
-        aiSection = "<div class='card warn'>Résumé IA non disponible</div>"
-    }
-}
 
-                // ── 5. CONSTRUCTION HTML ────────────────────────────────────
-                def html = """<!DOCTYPE html>
+                        // ── 4. PIP-AUDIT ────────────────────────────────────
+                        def auditSummary = "Rapport non disponible"
+                        def auditClass   = "warn"
+                        def auditDetail  = ""
+                        if (fileExists("${REPORTS_DIR}\\pip_audit_report.json")) {
+                            try {
+                                def auditRaw  = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+                                def auditJson = new groovy.json.JsonSlurper().parseText(auditRaw)
+
+                                def allVulns   = auditJson.dependencies.findAll { it.vulns && it.vulns.size() > 0 }
+                                def totalVulns = allVulns.sum { it.vulns.size() } ?: 0
+
+                                auditSummary = totalVulns == 0
+                                    ? "Aucune vulnerabilite detectee"
+                                    : "${totalVulns} vulnerabilite(s) sur ${allVulns.size()} paquet(s)"
+                                auditClass = totalVulns == 0 ? "ok" : "fail"
+
+                                if (allVulns) {
+                                    def rows = allVulns.collect { dep ->
+                                        dep.vulns.collect { v ->
+                                            "<tr><td>${dep.name} ${dep.version}</td><td>${v.id ?: ''}</td><td>${v.description ?: ''}</td><td>${v.fix_versions?.join(', ') ?: 'N/A'}</td></tr>"
+                                        }.join("\n")
+                                    }.join("\n")
+                                    auditDetail = """
+                                    <table class='detail-table'>
+                                        <tr><th>Paquet</th><th>CVE</th><th>Description</th><th>Version corrigee</th></tr>
+                                        ${rows}
+                                    </table>"""
+                                }
+                            } catch (e) {
+                                auditSummary = "Erreur lecture rapport : ${e.message}"
+                                auditClass   = "warn"
+                            }
+                        }
+
+                        // ── 5. SECTION IA ────────────────────────────────────
+                        def aiSection = ""
+                        if (env.AI_SUMMARY) {
+                            try {
+                                def aiJson = new groovy.json.JsonSlurper().parseText(env.AI_SUMMARY)
+                                def aiText = aiJson.content[0].text.replace("\n", "<br>")
+                                aiSection = """
+                                <div class='card ai-card'>
+                                    <span class='label'>Analyse IA — Résumé et priorités</span>
+                                    <div class='ai-content'>${aiText}</div>
+                                </div>"""
+                            } catch (e) {
+                                aiSection = "<div class='card warn'>Résumé IA non disponible</div>"
+                            }
+                        }
+
+                        // ── 6. CONSTRUCTION HTML ────────────────────────────
+                        def html = """<!DOCTYPE html>
 <html>
 <head>
   <meta charset='UTF-8'>
@@ -417,9 +362,9 @@ if (env.AI_SUMMARY) {
     .warn       { color: #e65100; }
     .fail-bg    { background: #fff3f3; border-left: 4px solid #c62828; padding: 8px; }
     pre.detail  { font-size: 12px; overflow-x: auto; }
-    .detail-table          { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 13px; }
-    .detail-table th       { background: #eeeeee; padding: 6px 10px; text-align: left; }
-    .detail-table td       { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
+    .detail-table     { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 13px; }
+    .detail-table th  { background: #eeeeee; padding: 6px 10px; text-align: left; }
+    .detail-table td  { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
     .build-info { font-size: 13px; color: #666; margin-bottom: 20px; }
   </style>
 </head>
@@ -455,39 +400,43 @@ if (env.AI_SUMMARY) {
   <span class='${auditClass}'>${auditSummary}</span>
   ${auditDetail}
 </div>
-${aiSection} 
+
+${aiSection}
+
 </body>
 </html>"""
 
-                // ── 6. ECRITURE ─────────────────────────────────────────────
-                writeFile file: "${REPORTS_DIR}\\sanity_check_report.html",
-                          text: html,
-                          encoding: "UTF-8"
+                        // ── 7. ECRITURE ──────────────────────────────────────
+                        writeFile file: "${REPORTS_DIR}\\sanity_check_report.html",
+                                  text: html,
+                                  encoding: "UTF-8"
 
-                bat "copy \"${REPORTS_DIR}\\sanity_check_report.html\" \"${WORKSPACE_DIR}\\reports\\sanity_check_report.html\""
-                echo "Rapport HTML genere avec succes"
+                        bat "copy \"${REPORTS_DIR}\\sanity_check_report.html\" \"${WORKSPACE_DIR}\\reports\\sanity_check_report.html\""
+                        echo "Rapport HTML genere avec succes"
+                    }
+                }
             }
         }
-    }
-}
-    }
-  post {
-    always {
-        script {
-            def reportFile = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
-            def reportExists = fileExists(reportFile)
-            echo "📄 Rapport existe : ${reportExists}"
-        }
-        emailext (
-            subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
-            body: """Le pipeline est terminé.
+
+    } // fin stages
+
+    post {
+        always {
+            script {
+                def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+                def reportExists = fileExists(reportFile)
+                echo "📄 Rapport existe : ${reportExists}"
+            }
+            emailext(
+                subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
+                body: """Le pipeline est terminé.
 Build: ${currentBuild.displayName}
 Résultat: ${currentBuild.currentResult}
 Voir rapport en PIECE JOINTE.""",
-            attachmentsPattern: "reports/sanity_check_report.html",
-            to: "pw39f@ningen-group.com"
-        )
-    }
-}
-} 
+                attachmentsPattern: "reports/sanity_check_report.html",
+                to: "pw39f@ningen-group.com"
+            )
         }
+    }
+
+} // fin pipeline
