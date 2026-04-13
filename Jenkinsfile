@@ -97,13 +97,13 @@ pipeline {
             steps {
                 script {
                     def pylintRaw = fileExists("${REPORTS_DIR}\\pylint_report.json")
-                        ? readFile("${REPORTS_DIR}\\pylint_report.json").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\pylint_report.json", encoding: "UTF-8").take(1000)
                         : "non disponible"
                     def banditRaw = fileExists("${REPORTS_DIR}\\bandit_report.json")
-                        ? readFile("${REPORTS_DIR}\\bandit_report.json").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\bandit_report.json", encoding: "UTF-8").take(1000)
                         : "non disponible"
                     def auditRaw  = fileExists("${REPORTS_DIR}\\pip_audit_report.json")
-                        ? readFile("${REPORTS_DIR}\\pip_audit_report.json").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8").take(1000)
                         : "non disponible"
 
                     def prompt = """Tu es un expert en qualité de code Python.
@@ -147,7 +147,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
   --data @"%REPORTS_DIR%\\request.json" ^
   -o "%REPORTS_DIR%\\ai_response.json"
 """
-                        def response = readFile("${REPORTS_DIR}\\ai_response.json").trim()
+                        def response = readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
                         echo "Claude raw response: ${response}"
                         env.AI_SUMMARY = response
                     }
@@ -220,7 +220,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                         // ── 1. SYNTAXE ──────────────────────────────────────
                         def syntaxContent = ""
                         if (fileExists("${REPORTS_DIR}\\syntax_errors.txt")) {
-                            syntaxContent = readFile("${REPORTS_DIR}\\syntax_errors.txt").trim()
+                            syntaxContent = readFile(file: "${REPORTS_DIR}\\syntax_errors.txt", encoding: "UTF-8").trim()
                         }
                         def syntaxStatus = syntaxContent.isEmpty() ? "OK" : "Erreurs detectees"
                         def syntaxClass  = syntaxContent.isEmpty() ? "ok" : "fail"
@@ -233,7 +233,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                         def pylintDetail  = ""
                         if (fileExists("${REPORTS_DIR}\\pylint_report.json")) {
                             try {
-                                def pylintRaw  = readFile("${REPORTS_DIR}\\pylint_report.json")
+                                def pylintRaw  = readFile(file: "${REPORTS_DIR}\\pylint_report.json", encoding: "UTF-8")
                                 def pylintJson = new groovy.json.JsonSlurper().parseText(pylintRaw)
 
                                 def errors      = pylintJson.count { it.type == "error"      }
@@ -268,7 +268,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                         def banditDetail  = ""
                         if (fileExists("${REPORTS_DIR}\\bandit_report.json")) {
                             try {
-                                def banditRaw  = readFile("${REPORTS_DIR}\\bandit_report.json")
+                                def banditRaw  = readFile(file: "${REPORTS_DIR}\\bandit_report.json", encoding: "UTF-8")
                                 def banditJson = new groovy.json.JsonSlurper().parseText(banditRaw)
 
                                 def high   = banditJson.results.count { it.issue_severity == "HIGH"   }
@@ -304,7 +304,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                         def auditDetail  = ""
                         if (fileExists("${REPORTS_DIR}\\pip_audit_report.json")) {
                             try {
-                                def auditRaw  = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+                                def auditRaw  = readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8")
                                 def auditJson = new groovy.json.JsonSlurper().parseText(auditRaw)
 
                                 def allVulns   = auditJson.dependencies.findAll { it.vulns && it.vulns.size() > 0 }
@@ -339,7 +339,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 
                         // Lire depuis le fichier si env var vide ou corrompue
                         if (!aiRaw && fileExists("${REPORTS_DIR}\\ai_response.json")) {
-                            aiRaw = readFile("${REPORTS_DIR}\\ai_response.json").trim()
+                            aiRaw = readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
                         }
 
                         if (aiRaw) {
