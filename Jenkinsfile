@@ -149,7 +149,8 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 """
                         def response = readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
                         echo "Claude raw response: ${response}"
-                        env.AI_SUMMARY = response
+                        // ⚠️ Ne pas stocker dans env.* : Jenkins corrompt les non-ASCII en CP1252
+                        // Le stage HTML lira directement depuis ai_response.json
                     }
                 }
             }
@@ -222,7 +223,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                         if (fileExists("${REPORTS_DIR}\\syntax_errors.txt")) {
                             syntaxContent = readFile(file: "${REPORTS_DIR}\\syntax_errors.txt", encoding: "UTF-8").trim()
                         }
-                        def syntaxStatus = syntaxContent.isEmpty() ? "OK" : "Erreurs detectees"
+                        def syntaxStatus = syntaxContent.isEmpty() ? "OK" : "Erreurs d&eacute;tect&eacute;es"
                         def syntaxClass  = syntaxContent.isEmpty() ? "ok" : "fail"
                         def syntaxDetail = syntaxContent.isEmpty() ? "" : """
                             <pre class='detail fail-bg'>${syntaxContent}</pre>"""
@@ -311,8 +312,8 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                                 def totalVulns = allVulns.sum { it.vulns.size() } ?: 0
 
                                 auditSummary = totalVulns == 0
-                                    ? "Aucune vulnerabilite detectee"
-                                    : "${totalVulns} vulnerabilite(s) sur ${allVulns.size()} paquet(s)"
+                                    ? "Aucune vuln&eacute;rabilit&eacute; d&eacute;tect&eacute;e"
+                                    : "${totalVulns} vuln&eacute;rabilit&eacute;(s) sur ${allVulns.size()} paquet(s)"
                                 auditClass = totalVulns == 0 ? "ok" : "fail"
 
                                 if (allVulns) {
@@ -323,7 +324,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                                     }.join("\n")
                                     auditDetail = """
                                     <table class='detail-table'>
-                                        <tr><th>Paquet</th><th>CVE</th><th>Description</th><th>Version corrigee</th></tr>
+                                        <tr><th>Paquet</th><th>CVE</th><th>Description</th><th>Version corrig&eacute;e</th></tr>
                                         ${rows}
                                     </table>"""
                                 }
@@ -335,12 +336,10 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 
                         // ── 5. SECTION IA ────────────────────────────────────
                         def aiSection = ""
-                        def aiRaw = env.AI_SUMMARY ?: ""
-
-                        // Lire depuis le fichier si env var vide ou corrompue
-                        if (!aiRaw && fileExists("${REPORTS_DIR}\\ai_response.json")) {
-                            aiRaw = readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
-                        }
+                        // Toujours lire depuis le fichier — env.* corrompt l'UTF-8 sur Windows
+                        def aiRaw = fileExists("${REPORTS_DIR}\\ai_response.json")
+                            ? readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
+                            : ""
 
                         if (aiRaw) {
                             try {
@@ -350,7 +349,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                                 if (aiJson.type == "error") {
                                     aiSection = """
                                     <div class='card'>
-                                        <span class='label warn'>Analyse IA — Erreur API</span>
+                                        <span class='label warn'>Analyse IA &mdash; Erreur API</span>
                                         <pre style='color:#c62828'>${aiJson.error?.message ?: aiRaw}</pre>
                                     </div>"""
                                 } else {
@@ -361,19 +360,19 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                                         .replace("\n", "<br>")
                                     aiSection = """
                                     <div class='card ai-card'>
-                                        <span class='label'>Analyse IA — Résumé et priorités</span>
+                                        <span class='label'>Analyse IA &mdash; R&eacute;sum&eacute; et priorit&eacute;s</span>
                                         <div class='ai-content' style='margin-top:10px;line-height:1.6'>${aiText}</div>
                                     </div>"""
                                 }
                             } catch (e) {
                                 aiSection = """
                                 <div class='card'>
-                                    <span class='label warn'>Analyse IA — Parsing échoué</span>
+                                    <span class='label warn'>Analyse IA &mdash; Parsing &eacute;chou&eacute;</span>
                                     <pre style='font-size:11px;color:#c62828'>${e.message}\n\nRaw (200 chars): ${aiRaw.take(200)}</pre>
                                 </div>"""
                             }
                         } else {
-                            aiSection = "<div class='card'><span class='label warn'>Analyse IA — Réponse vide</span></div>"
+                            aiSection = "<div class='card'><span class='label warn'>Analyse IA &mdash; R&eacute;ponse vide</span></div>"
                         }
 
                         // ── 6. CONSTRUCTION HTML ────────────────────────────
@@ -401,7 +400,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 </head>
 <body>
 
-<h2>Sanity Check - Rapport de qualite</h2>
+<h2>Sanity Check &mdash; Rapport de qualit&eacute;</h2>
 <p class='build-info'>
   Build : ${currentBuild.displayName} &nbsp;|&nbsp;
   Date  : ${new Date().format('dd/MM/yyyy HH:mm')} &nbsp;|&nbsp;
@@ -415,19 +414,19 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 </div>
 
 <div class='card'>
-  <span class='label'>Qualite du code (Pylint)</span> &nbsp;
+  <span class='label'>Qualit&eacute; du code (Pylint)</span> &nbsp;
   <span class='${pylintClass}'>${pylintSummary}</span>
   ${pylintDetail}
 </div>
 
 <div class='card'>
-  <span class='label'>Securite (Bandit)</span> &nbsp;
+  <span class='label'>S&eacute;curit&eacute; (Bandit)</span> &nbsp;
   <span class='${banditClass}'>${banditSummary}</span>
   ${banditDetail}
 </div>
 
 <div class='card'>
-  <span class='label'>Dependances (pip-audit)</span> &nbsp;
+  <span class='label'>D&eacute;pendances (pip-audit)</span> &nbsp;
   <span class='${auditClass}'>${auditSummary}</span>
   ${auditDetail}
 </div>
@@ -459,11 +458,11 @@ ${aiSection}
                 echo "📄 Rapport existe : ${reportExists}"
             }
             emailext(
-                subject: "Sanity Check - Résultat: ${currentBuild.currentResult}",
-                body: """Le pipeline est terminé.
+                subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
+                body: """Le pipeline est termin&eacute;.
 Build: ${currentBuild.displayName}
-Résultat: ${currentBuild.currentResult}
-Voir rapport en PIECE JOINTE.""",
+R&eacute;sultat: ${currentBuild.currentResult}
+Voir rapport en PI&Egrave;CE JOINTE.""",
                 attachmentsPattern: "reports/sanity_check_report.html",
                 to: "pw39f@ningen-group.com"
             )
