@@ -96,54 +96,58 @@ pipeline {
         stage('AI Report Summary') {
             steps {
                 script {
-                    def pylintRaw = readFile("${REPORTS_DIR}\\pylint_report.json")
-                    def banditRaw = readFile("${REPORTS_DIR}\\bandit_report.json")
-                    def auditRaw  = readFile("${REPORTS_DIR}\\pip_audit_report.json")
+                    def pylintRaw = fileExists("${REPORTS_DIR}\\pylint_report.json")
+                        ? readFile("${REPORTS_DIR}\\pylint_report.json").take(1000)
+                        : "non disponible"
+                    def banditRaw = fileExists("${REPORTS_DIR}\\bandit_report.json")
+                        ? readFile("${REPORTS_DIR}\\bandit_report.json").take(1000)
+                        : "non disponible"
+                    def auditRaw  = fileExists("${REPORTS_DIR}\\pip_audit_report.json")
+                        ? readFile("${REPORTS_DIR}\\pip_audit_report.json").take(1000)
+                        : "non disponible"
 
-                    def prompt = """
-Tu es un expert en qualité de code Python.
+                    def prompt = """Tu es un expert en qualité de code Python.
 
 PYLINT:
-${pylintRaw.take(1000)}
+${pylintRaw}
 
 BANDIT:
-${banditRaw.take(1000)}
+${banditRaw}
 
 PIP-AUDIT:
-${auditRaw.take(1000)}
+${auditRaw}
 
 Donne un résumé clair en français avec :
 1. Problèmes critiques
 2. Problèmes mineurs
 3. Temps de correction
-4. Solutions
-"""
+4. Solutions"""
 
-                    writeFile file: "request.json", text: """
-{
-  "model": "claude-sonnet-4-20250514",
-  "max_tokens": 1024,
-  "messages": [
-    {
-      "role": "user",
-      "content": "${prompt.replace('"', '\\"')}"
-    }
-  ]
-}
-"""
+                    // ✅ JsonOutput échappe proprement guillemets, retours à la ligne et backslashes
+                    def requestBody = groovy.json.JsonOutput.toJson([
+                        model     : "claude-sonnet-4-20250514",
+                        max_tokens: 1024,
+                        messages  : [
+                            [ role: "user", content: prompt ]
+                        ]
+                    ])
+
+                    writeFile file: "${REPORTS_DIR}\\request.json",
+                              text: requestBody,
+                              encoding: "UTF-8"
 
                     withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
-                        def response = bat(
-                            returnStdout: true,
-                            script: """
+                        // ✅ chcp 65001 + écriture fichier → évite corruption CP850 du bat()
+                        bat """
+chcp 65001 > nul
 curl -s -X POST https://api.anthropic.com/v1/messages ^
--H "x-api-key: %ANTHROPIC_API_KEY%" ^
--H "anthropic-version: 2023-06-01" ^
--H "content-type: application/json" ^
---data @request.json
+  -H "x-api-key: %ANTHROPIC_API_KEY%" ^
+  -H "anthropic-version: 2023-06-01" ^
+  -H "content-type: application/json" ^
+  --data @"%REPORTS_DIR%\\request.json" ^
+  -o "%REPORTS_DIR%\\ai_response.json"
 """
-                        ).trim()
-
+                        def response = readFile("${REPORTS_DIR}\\ai_response.json").trim()
                         echo "Claude raw response: ${response}"
                         env.AI_SUMMARY = response
                     }
@@ -331,18 +335,45 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
 
                         // ── 5. SECTION IA ────────────────────────────────────
                         def aiSection = ""
-                        if (env.AI_SUMMARY) {
+                        def aiRaw = env.AI_SUMMARY ?: ""
+
+                        // Lire depuis le fichier si env var vide ou corrompue
+                        if (!aiRaw && fileExists("${REPORTS_DIR}\\ai_response.json")) {
+                            aiRaw = readFile("${REPORTS_DIR}\\ai_response.json").trim()
+                        }
+
+                        if (aiRaw) {
                             try {
-                                def aiJson = new groovy.json.JsonSlurper().parseText(env.AI_SUMMARY)
-                                def aiText = aiJson.content[0].text.replace("\n", "<br>")
-                                aiSection = """
-                                <div class='card ai-card'>
-                                    <span class='label'>Analyse IA — Résumé et priorités</span>
-                                    <div class='ai-content'>${aiText}</div>
-                                </div>"""
+                                def aiJson = new groovy.json.JsonSlurper().parseText(aiRaw)
+
+                                // Vérifier que l'API n'a pas retourné une erreur
+                                if (aiJson.type == "error") {
+                                    aiSection = """
+                                    <div class='card'>
+                                        <span class='label warn'>Analyse IA — Erreur API</span>
+                                        <pre style='color:#c62828'>${aiJson.error?.message ?: aiRaw}</pre>
+                                    </div>"""
+                                } else {
+                                    def aiText = aiJson.content[0].text
+                                        .replace("&", "&amp;")
+                                        .replace("<", "&lt;")
+                                        .replace(">", "&gt;")
+                                        .replace("\n", "<br>")
+                                    aiSection = """
+                                    <div class='card ai-card'>
+                                        <span class='label'>Analyse IA — Résumé et priorités</span>
+                                        <div class='ai-content' style='margin-top:10px;line-height:1.6'>${aiText}</div>
+                                    </div>"""
+                                }
                             } catch (e) {
-                                aiSection = "<div class='card warn'>Résumé IA non disponible</div>"
+                                aiSection = """
+                                <div class='card'>
+                                    <span class='label warn'>Analyse IA — Parsing échoué</span>
+                                    <pre style='font-size:11px;color:#c62828'>${e.message}\n\nRaw (200 chars): ${aiRaw.take(200)}</pre>
+                                </div>"""
                             }
+                        } else {
+                            aiSection = "<div class='card'><span class='label warn'>Analyse IA — Réponse vide</span></div>"
                         }
 
                         // ── 6. CONSTRUCTION HTML ────────────────────────────
