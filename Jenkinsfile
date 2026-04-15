@@ -468,7 +468,6 @@ ${aiSection}
 
   post {
     always {
-        steps {
             bat """
             powershell -ExecutionPolicy Bypass -File send_mail.ps1
             """
@@ -493,6 +492,6 @@ ${aiSection}
 //         }
       
 
-    }
+    
 
 } // fin pipeline
