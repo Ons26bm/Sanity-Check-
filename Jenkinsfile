@@ -466,23 +466,33 @@ ${aiSection}
 
     } // fin stages
 
-    post {
-        always {
-            script {
-                def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
-                def reportExists = fileExists(reportFile)
-                echo "📄 Rapport existe : ${reportExists}"
-            }
-            emailext(
-                subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
-                body: """Le pipeline est termin&eacute;.
-Build: ${currentBuild.displayName}
-R&eacute;sultat: ${currentBuild.currentResult}
-Voir rapport en PI&Egrave;CE JOINTE.""",
-                attachmentsPattern: "reports/sanity_check_report.html",
-                to: "pw39f@ningen-group.com"
-            )
+  post {
+    always {
+        steps {
+            bat """
+            powershell -ExecutionPolicy Bypass -File send_mail.ps1
+            """
         }
+    }
+
+//         always {
+//             script {
+//                 def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+//                 def reportExists = fileExists(reportFile)
+//                 echo "📄 Rapport existe : ${reportExists}"
+//             }
+//             emailext(
+//                 subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
+//                 body: """Le pipeline est termin&eacute;.
+// Build: ${currentBuild.displayName}
+// R&eacute;sultat: ${currentBuild.currentResult}
+// Voir rapport en PI&Egrave;CE JOINTE.""",
+//                 attachmentsPattern: "reports/sanity_check_report.html",
+//                 to: "pw39f@ningen-group.com"
+//             )
+//         }
+      
+
     }
 
 } // fin pipeline
