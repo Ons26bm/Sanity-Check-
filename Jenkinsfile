@@ -97,13 +97,13 @@ pipeline {
             steps {
                 script {
                     def pylintRaw = fileExists("${REPORTS_DIR}\\pylint_report.json")
-                        ? readFile(file: "${REPORTS_DIR}\\pylint_report.json", encoding: "UTF-8").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\pylint_report.json", encoding: "UTF-8").take(8000)
                         : "non disponible"
                     def banditRaw = fileExists("${REPORTS_DIR}\\bandit_report.json")
-                        ? readFile(file: "${REPORTS_DIR}\\bandit_report.json", encoding: "UTF-8").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\bandit_report.json", encoding: "UTF-8").take(8000)
                         : "non disponible"
                     def auditRaw  = fileExists("${REPORTS_DIR}\\pip_audit_report.json")
-                        ? readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8").take(1000)
+                        ? readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8").take(8000)
                         : "non disponible"
 
                     def prompt = """Tu es un expert en qualité de code Python spécialisé dans les pipelines de données (ETL, scripts d'analyse, traitement de fichiers).
