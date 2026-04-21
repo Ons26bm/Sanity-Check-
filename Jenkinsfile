@@ -93,66 +93,68 @@ pipeline {
             }
         }
 
-  stage('AI Report Summary') {
-    steps {
-        script {
+        stage('AI Report Summary') {
+            steps {
+                script {
+                    def pylintRaw = fileExists("${REPORTS_DIR}\\pylint_report.json")
+                        ? readFile(file: "${REPORTS_DIR}\\pylint_report.json", encoding: "UTF-8").take(8000)
+                        : "non disponible"
+                    def banditRaw = fileExists("${REPORTS_DIR}\\bandit_report.json")
+                        ? readFile(file: "${REPORTS_DIR}\\bandit_report.json", encoding: "UTF-8").take(8000)
+                        : "non disponible"
+                    def auditRaw  = fileExists("${REPORTS_DIR}\\pip_audit_report.json")
+                        ? readFile(file: "${REPORTS_DIR}\\pip_audit_report.json", encoding: "UTF-8").take(8000)
+                        : "non disponible"
 
-            def readSafe = { path ->
-                fileExists(path) ? readFile(path, "UTF-8").take(8000) : "non disponible"
-            }
+                    def prompt = """Tu es un expert en qualité de code Python spécialisé dans les pipelines de données (ETL, scripts d'analyse, traitement de fichiers).
 
-            def pylintRaw = readSafe("${REPORTS_DIR}\\pylint_report.json")
-            def banditRaw = readSafe("${REPORTS_DIR}\\bandit_report.json")
-            def auditRaw  = readSafe("${REPORTS_DIR}\\pip_audit_report.json")
+CONTEXTE : Ces scripts sont utilisés par un data analyst. Les problèmes qui bloquent l'exécution ou exposent des données sont prioritaires. Les conventions de style sont secondaires.
 
-            def prompt = """Tu es un expert en qualité de code Python pour pipelines de données.
-
-Priorité :
-- erreurs bloquantes (crash, données fausses)
-- sécurité (exposition données)
-
-Ignore le style sauf si critique.
-
-=== PYLINT ===
+=== RAPPORT PYLINT (qualité du code) ===
 ${pylintRaw}
 
-=== BANDIT ===
+=== RAPPORT BANDIT (sécurité) ===
 ${banditRaw}
 
-=== PIP-AUDIT ===
+=== RAPPORT PIP-AUDIT (vulnérabilités dépendances) ===
 ${auditRaw}
 
-=== OUTPUT ATTENDU ===
+=== INSTRUCTIONS ===
+Analyse ces rapports et réponds UNIQUEMENT avec ce format, sans introduction ni conclusion générique :
 
-DECISION: PASS ou FAIL
+## 🔴 Bloquant (à corriger avant toute exécution)
+Pour chaque problème : [fichier:ligne] — description concrète — risque réel pour les données
 
-SUMMARY: résumé en 3-5 lignes max compréhensible par un data analyst
+## 🟡 À corriger cette semaine
+Pour chaque problème : [fichier:ligne] — description concrète — impact sur la maintenabilité
 
-## 🔴 Bloquant
-...
+## 🟢 Dépendances vulnérables
+Pour chaque CVE : paquet@version — CVE — commande de mise à jour exacte
 
-## 🟡 Important
-...
+## ⚡ Actions immédiates (copier-coller)
+Maximum 3 commandes shell ou corrections de code, les plus impactantes uniquement
 
-## 🟢 Dépendances
-...
+## ⏱ Estimation
+Bloquant: Xh | Cette semaine: Xh | Total: Xh
 
-## ⚡ Actions
-...
+Ne génère pas de conseils génériques. Si une section est vide, écris "Aucun problème détecté"."""
 
-Si aucun problème : écrire "Aucun problème détecté"
-"""
+                    // ✅ JsonOutput échappe proprement guillemets, retours à la ligne et backslashes
+                    def requestBody = groovy.json.JsonOutput.toJson([
+                        model     : "claude-sonnet-4-20250514",
+                        max_tokens: 1024,
+                        messages  : [
+                            [ role: "user", content: prompt ]
+                        ]
+                    ])
 
-            def requestBody = groovy.json.JsonOutput.toJson([
-                model     : "claude-sonnet-4-20250514",
-                max_tokens: 1200,
-                messages  : [[role: "user", content: prompt]]
-            ])
+                    writeFile file: "${REPORTS_DIR}\\request.json",
+                              text: requestBody,
+                              encoding: "UTF-8"
 
-            writeFile file: "${REPORTS_DIR}\\request.json", text: requestBody, encoding: "UTF-8"
-
-            withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
-                bat """
+                    withCredentials([string(credentialsId: 'anthropic-key', variable: 'ANTHROPIC_API_KEY')]) {
+                        // ✅ chcp 65001 + écriture fichier → évite corruption CP850 du bat()
+                        bat """
 chcp 65001 > nul
 curl -s -X POST https://api.anthropic.com/v1/messages ^
   -H "x-api-key: %ANTHROPIC_API_KEY%" ^
@@ -161,49 +163,14 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
   --data @"%REPORTS_DIR%\\request.json" ^
   -o "%REPORTS_DIR%\\ai_response.json"
 """
-            }
-
-            def aiJson = new groovy.json.JsonSlurper().parseText(
-                readFile("${REPORTS_DIR}\\ai_response.json", "UTF-8")
-            )
-
-            def aiText = aiJson.content[0].text
-
-            // Sauvegarde brute
-            writeFile file: "${REPORTS_DIR}\\ai_text.txt", text: aiText, encoding: "UTF-8"
-
-            // Extraction DECISION
-            def decision = aiText.toUpperCase().contains("DECISION: FAIL") ? "FAIL" : "PASS"
-
-            // Extraction SUMMARY
-            def summary = "Résumé non disponible"
-            def match = (aiText =~ /SUMMARY:(.*)/)
-            if (match) {
-                summary = match[0][1].trim()
-            }
-
-            writeFile file: "${REPORTS_DIR}\\ai_decision.txt", text: decision
-            writeFile file: "${REPORTS_DIR}\\ai_summary.txt", text: summary
-
-            echo "🤖 AI Decision: ${decision}"
-            echo "📝 AI Summary: ${summary}"
-        }
-    }
-}
-        stage('AI Decision Gate') {
-    steps {
-        script {
-            def decision = readFile("${REPORTS_DIR}\\ai_decision.txt").trim()
-
-            if (decision == "FAIL") {
-                error("🚨 Pipeline bloqué par IA (problèmes critiques)")
-            } else {
-                echo "✅ Pipeline validé par IA"
+                        def response = readFile(file: "${REPORTS_DIR}\\ai_response.json", encoding: "UTF-8").trim()
+                        echo "Claude raw response: ${response}"
+                        // ⚠️ Ne pas stocker dans env.* : Jenkins corrompt les non-ASCII en CP1252
+                        // Le stage HTML lira directement depuis ai_response.json
+                    }
+                }
             }
         }
-    }
-}
-  
 
         stage('Run Sanity Check on Sample Data') {
             steps {
@@ -505,7 +472,7 @@ ${aiSection}
     //         """
     //     }
     
-post {
+  post {
 
         always {
             script {
@@ -527,5 +494,5 @@ Voir rapport en PI&Egrave;CE JOINTE.""",
 
     
 
-}
+} // fin pipeline
 }
