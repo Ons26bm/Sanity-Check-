@@ -466,13 +466,13 @@ ${aiSection}
 
     } // fin stages
 
-  post {
     // always {
     //         bat """
     //         powershell -ExecutionPolicy Bypass -File send_mail.ps1
     //         """
     //     }
     
+  post {
 
         always {
             script {
@@ -495,3 +495,4 @@ Voir rapport en PI&Egrave;CE JOINTE.""",
     
 
 } // fin pipeline
+}
