@@ -506,27 +506,26 @@ ${aiSection}
     //     }
     
 post {
-    always {
-        script {
-            def summary = fileExists("${REPORTS_DIR}\\ai_summary.txt")
-                ? readFile("${REPORTS_DIR}\\ai_summary.txt")
-                : "Résumé non disponible"
 
+        always {
+            script {
+                def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+                def reportExists = fileExists(reportFile)
+                echo "📄 Rapport existe : ${reportExists}"
+            }
             emailext(
-                subject: "🚨 Sanity Check: ${currentBuild.currentResult}",
-                body: """
-Résumé IA :
-${summary}
-
+                subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
+                body: """Le pipeline est termin&eacute;.
 Build: ${currentBuild.displayName}
-Résultat: ${currentBuild.currentResult}
-
-Voir rapport HTML en pièce jointe.
-""",
+R&eacute;sultat: ${currentBuild.currentResult}
+Voir rapport en PI&Egrave;CE JOINTE.""",
                 attachmentsPattern: "reports/sanity_check_report.html",
                 to: "pw39f@ningen-group.com"
             )
         }
-    }
+      
+
+    
+
 }
 }
