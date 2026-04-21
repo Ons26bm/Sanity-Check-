@@ -325,7 +325,7 @@ curl -s -X POST https://api.anthropic.com/v1/messages ^
                                 def auditJson = new groovy.json.JsonSlurper().parseText(auditRaw)
 
                                 def allVulns   = auditJson.dependencies.findAll { it.vulns && it.vulns.size() > 0 }
-                                def totalVulns = allVulns.sum { it.vulns.size() } ?: 0
+                                def totalVulns = allVulns.inject(0) { acc, dep -> acc + dep.vulns.size() }
 
                                 auditSummary = totalVulns == 0
                                     ? "Aucune vuln&eacute;rabilit&eacute; d&eacute;tect&eacute;e"
