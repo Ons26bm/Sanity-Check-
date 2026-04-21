@@ -481,8 +481,8 @@ ${aiSection}
                 echo "📄 Rapport existe : ${reportExists}"
             }
             emailext(
-                subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
-                body: """Le pipeline est termin&eacute;.
+                subject: "Sanity Check - Resultat: ${currentBuild.currentResult}",
+                body: """Le pipeline est terminé;.
 Build: ${currentBuild.displayName}
 Resultat: ${currentBuild.currentResult}
 Voir rapport en piece jointe.""",
