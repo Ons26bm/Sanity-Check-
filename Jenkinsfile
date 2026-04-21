@@ -482,7 +482,7 @@ ${aiSection}
             }
             emailext(
                 subject: "Sanity Check - Resultat: ${currentBuild.currentResult}",
-                body: """Le pipeline est terminé;.
+                body: """Le pipeline est termine;.
 Build: ${currentBuild.displayName}
 Resultat: ${currentBuild.currentResult}
 Voir rapport en piece jointe.""",
