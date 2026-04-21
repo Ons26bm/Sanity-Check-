@@ -137,7 +137,7 @@ Maximum 3 commandes shell ou corrections de code, les plus impactantes uniquemen
 ## ⏱ Estimation
 Bloquant: Xh | Cette semaine: Xh | Total: Xh
 
-Ne génère pas de conseils génériques. Si une section est vide, écris "Aucun problème détecté"."""
+Ne génère pas de conseils génériques. Si une section est vide, écris "Aucun probleme detecte"."""
 
                     // ✅ JsonOutput échappe proprement guillemets, retours à la ligne et backslashes
                     def requestBody = groovy.json.JsonOutput.toJson([
@@ -484,8 +484,8 @@ ${aiSection}
                 subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
                 body: """Le pipeline est termin&eacute;.
 Build: ${currentBuild.displayName}
-R&eacute;sultat: ${currentBuild.currentResult}
-Voir rapport en PI&Egrave;CE JOINTE.""",
+Resultat: ${currentBuild.currentResult}
+Voir rapport en piece jointe.""",
                 attachmentsPattern: "reports/sanity_check_report.html",
                 to: "pw39f@ningen-group.com"
             )
