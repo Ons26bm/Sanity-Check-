@@ -467,29 +467,29 @@ ${aiSection}
     } // fin stages
 
   post {
-    always {
-            bat """
-            powershell -ExecutionPolicy Bypass -File send_mail.ps1
-            """
-        }
-    }
+    // always {
+    //         bat """
+    //         powershell -ExecutionPolicy Bypass -File send_mail.ps1
+    //         """
+    //     }
+    
 
-//         always {
-//             script {
-//                 def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
-//                 def reportExists = fileExists(reportFile)
-//                 echo "📄 Rapport existe : ${reportExists}"
-//             }
-//             emailext(
-//                 subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
-//                 body: """Le pipeline est termin&eacute;.
-// Build: ${currentBuild.displayName}
-// R&eacute;sultat: ${currentBuild.currentResult}
-// Voir rapport en PI&Egrave;CE JOINTE.""",
-//                 attachmentsPattern: "reports/sanity_check_report.html",
-//                 to: "pw39f@ningen-group.com"
-//             )
-//         }
+        always {
+            script {
+                def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+                def reportExists = fileExists(reportFile)
+                echo "📄 Rapport existe : ${reportExists}"
+            }
+            emailext(
+                subject: "Sanity Check - R&eacute;sultat: ${currentBuild.currentResult}",
+                body: """Le pipeline est termin&eacute;.
+Build: ${currentBuild.displayName}
+R&eacute;sultat: ${currentBuild.currentResult}
+Voir rapport en PI&Egrave;CE JOINTE.""",
+                attachmentsPattern: "reports/sanity_check_report.html",
+                to: "pw39f@ningen-group.com"
+            )
+        }
       
 
     
