@@ -1,21 +1,21 @@
-# send_mail.ps1 — Version simplifiée avec ton mail perso en attendant
-# ou avec un service tiers gratuit comme SendGrid
+def content = '''$Outlook = New-Object -ComObject Outlook.Application
+$Mail    = $Outlook.CreateItem(0)
 
-$smtpServer = "smtp.office365.com"
-$smtpPort   = 587
-$from       = "autoreport@ningen-group.com"
-$to         = "pw39f@ningen-group.com"
-$password   = ConvertTo-SecureString "Cctsnlrvqwnrsrsh" -AsPlainText -Force
-$cred       = New-Object System.Management.Automation.PSCredential($from, $password)
+$Mail.To       = "pw39f@ningen-group.com"
+$Mail.Subject  = "Sanity Check - Resultat: $env:BUILD_RESULT"
+$Mail.HTMLBody = "<p>Le pipeline est termine.</p><p><b>Build:</b> $env:BUILD_NAME</p><p><b>Resultat:</b> $env:BUILD_RESULT</p>"
 
-Send-MailMessage `
-    -From $from `
-    -To $to `
-    -Subject "Sanity Check - Resultat: $env:BUILD_RESULT" `
-    -Body "Build: $env:BUILD_NAME | Resultat: $env:BUILD_RESULT" `
-    -BodyAsHtml `
-    -Attachments "C:\Autoreports\SanityCheck\reports\sanity_check_report.html" `
-    -SmtpServer $smtpServer `
-    -Port $smtpPort `
-    -UseSsl `
-    -Credential $cred
+$attachmentPath = "C:\\Autoreports\\SanityCheck\\reports\\sanity_check_report.html"
+if (Test-Path $attachmentPath) {
+    $Mail.Attachments.Add($attachmentPath) | Out-Null
+    Write-Host "Rapport attache"
+} else {
+    Write-Host "Rapport introuvable : $attachmentPath"
+}
+
+$Mail.Send()
+Write-Host "Mail envoye"'''
+
+new File("C:\\Autoreports\\SanityCheck\\reports\\send_mail.ps1").text = content
+println "Fichier mis a jour ✅"
+println new File("C:\\Autoreports\\SanityCheck\\reports\\send_mail.ps1").text
