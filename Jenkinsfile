@@ -472,27 +472,40 @@ ${aiSection}
     //         """
     //     }
     
-  post {
+//   post {
 
-        always {
-            script {
-                def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
-                def reportExists = fileExists(reportFile)
-                echo "📄 Rapport existe : ${reportExists}"
-            }
-            emailext(
-                subject: "Sanity Check - Resultat: ${currentBuild.currentResult}",
-                body: """Le pipeline est termine;.
-Build: ${currentBuild.displayName}
-Resultat: ${currentBuild.currentResult}
-Voir rapport en piece jointe.""",
-                attachmentsPattern: "reports/sanity_check_report.html",
-                to: "pw39f@ningen-group.com"
-            )
-        }
+//         always {
+//             script {
+//                 def reportFile   = "C:/Autoreports/SanityCheck/reports/sanity_check_report.html"
+//                 def reportExists = fileExists(reportFile)
+//                 echo "📄 Rapport existe : ${reportExists}"
+//             }
+//             emailext(
+//                 subject: "Sanity Check - Resultat: ${currentBuild.currentResult}",
+//                 body: """Le pipeline est termine;.
+// Build: ${currentBuild.displayName}
+// Resultat: ${currentBuild.currentResult}
+// Voir rapport en piece jointe.""",
+//                 attachmentsPattern: "reports/sanity_check_report.html",
+//                 to: "pw39f@ningen-group.com"
+//             )
+//         }
       
 
     
 
-} // fin pipeline
+// } // fin pipeline
+    post {
+    always {
+        withEnv([
+            "BUILD_RESULT=${currentBuild.currentResult}",
+            "BUILD_NAME=${currentBuild.displayName}"
+        ]) {
+            bat '''
+                echo %BUILD_RESULT%> C:\Autoreports\SanityCheck\reports\send_trigger.txt
+                echo %BUILD_NAME%>> C:\Autoreports\SanityCheck\reports\send_trigger.txt
+            '''
+        }
+    }
+}
 }
