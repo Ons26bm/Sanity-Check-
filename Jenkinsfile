@@ -495,7 +495,7 @@ ${aiSection}
     
 
 // } // fin pipeline
- post {
+post {
     always {
         withEnv([
             "BUILD_RESULT=${currentBuild.currentResult}",
@@ -506,6 +506,16 @@ ${aiSection}
                 echo %BUILD_NAME%>> C:\\Autoreports\\SanityCheck\\reports\\send_trigger.txt
             """
         }
+
+        emailext(
+            subject: "Sanity Check - Resultat: ${currentBuild.currentResult}",
+            body: """Le pipeline est termine.
+Build: ${currentBuild.displayName}
+Resultat: ${currentBuild.currentResult}
+Voir rapport en piece jointe.""",
+            attachmentsPattern: "reports/sanity_check_report.html",
+            to: "pw39f@ningen-group.com"
+        )
     }
 }
 }
