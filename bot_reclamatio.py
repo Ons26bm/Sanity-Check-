@@ -57,7 +57,7 @@ def write_log(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     full_message = f"[{timestamp}] {message}\n"
     print(full_message)
-
+    print("Hey Ningen!")
     if headers is None or drive_id is None:
         return
 
