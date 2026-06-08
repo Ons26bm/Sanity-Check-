@@ -1281,7 +1281,7 @@ SITE_NAME     = os.getenv("SITE_NAME")
 SHAREPOINT_FILE_LOG_PATH ="General/Autoreports Status"
 # Log file name
 log_filename = f"KYC_Brutes_{datetime.now().strftime('%Y%m%d_%H.%M')}.txt"
-
+a=20
 
 
 
