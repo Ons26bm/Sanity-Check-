@@ -502,8 +502,8 @@ ${aiSection}
             "BUILD_NAME=${currentBuild.displayName}"
         ]) {
             bat '''
-                echo %BUILD_RESULT%> C:\Autoreports\SanityCheck\reports\send_trigger.txt
-                echo %BUILD_NAME%>> C:\Autoreports\SanityCheck\reports\send_trigger.txt
+                bat "echo %BUILD_RESULT% > C:\\Autoreports\\SanityCheck\\reports\\send_trigger.txt"
+                bat "echo %BUILD_NAME%>> C:\Autoreports\SanityCheck\reports\send_trigger.txt"
             '''
         }
     }
