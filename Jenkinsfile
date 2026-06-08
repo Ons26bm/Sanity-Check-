@@ -495,16 +495,16 @@ ${aiSection}
     
 
 // } // fin pipeline
-    post {
+ post {
     always {
         withEnv([
             "BUILD_RESULT=${currentBuild.currentResult}",
             "BUILD_NAME=${currentBuild.displayName}"
         ]) {
-            bat '''
-                bat "echo %BUILD_RESULT% > C:\\Autoreports\\SanityCheck\\reports\\send_trigger.txt"
-                bat "echo %BUILD_NAME%>> C:\Autoreports\SanityCheck\reports\send_trigger.txt"
-            '''
+            bat """
+                echo %BUILD_RESULT% > C:\\Autoreports\\SanityCheck\\reports\\send_trigger.txt
+                echo %BUILD_NAME%>> C:\\Autoreports\\SanityCheck\\reports\\send_trigger.txt
+            """
         }
     }
 }
