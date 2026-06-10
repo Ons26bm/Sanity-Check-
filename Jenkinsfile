@@ -514,7 +514,7 @@ Build: ${currentBuild.displayName}
 Resultat: ${currentBuild.currentResult}
 Voir rapport en piece jointe.""",
             attachmentsPattern: "reports/sanity_check_report.html",
-            to: "pw39f@ningen-group.com"
+            to: "pw39f@ningen-group.com,ix41p@ningen-group.com"
         )
     }
 }
